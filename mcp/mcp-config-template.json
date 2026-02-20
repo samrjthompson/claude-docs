@@ -1,0 +1,73 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/your/project"
+      ],
+      "_comment": "Provides Claude Code with read/write access to your project directory. Replace /path/to/your/project with your actual project root. This server enables file creation, editing, and directory navigation within the specified path."
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "/path/to/your/project"
+      ],
+      "_comment": "Provides Claude Code with Git operations: status, diff, log, commit, branch management. Replace /path/to/your/project with your repository root. Requires Python and uvx installed."
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://username:password@localhost:5432/database"
+      ],
+      "_comment": "Connects Claude Code to a PostgreSQL database for schema inspection and query execution. Replace the connection string with your database credentials. For MySQL projects, use the MySQL MCP server instead."
+    },
+    "mysql": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@benborla29/mcp-server-mysql"
+      ],
+      "env": {
+        "MYSQL_HOST": "localhost",
+        "MYSQL_PORT": "3306",
+        "MYSQL_USER": "root",
+        "MYSQL_PASSWORD": "your-password",
+        "MYSQL_DATABASE": "your-database"
+      },
+      "_comment": "Connects Claude Code to a MySQL database. Replace environment variables with your local database credentials. Never use production credentials here."
+    },
+    "docker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-docker"
+      ],
+      "_comment": "Provides Claude Code with Docker operations: list containers, inspect, logs, manage images. Requires Docker to be running on the host machine."
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key"
+      },
+      "_comment": "Enables Claude Code to search the web for documentation, error messages, and library information. Requires a Brave Search API key (free tier available at https://brave.com/search/api/)."
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "_comment": "Provides Claude Code with persistent memory across sessions. Useful for remembering project context, decisions made, and architectural choices between conversations."
+    }
+  }
+}
