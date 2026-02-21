@@ -7,7 +7,7 @@ Review project dependencies for outdated versions, known vulnerabilities, unnece
 Examine:
 - `pom.xml` (Maven dependencies for Spring Boot)
 - `package.json` (npm dependencies for React)
-- `build.sbt` (sbt dependencies for Spark/Scala, if present)
+- `pom.xml` (Maven dependencies for Spark/Java, if present)
 
 ## Check Categories
 

@@ -8,14 +8,14 @@
 # Example:
 #   ./compose.sh ./CLAUDE.md base spring-boot react
 #   ./compose.sh ./CLAUDE.md base spring-boot kafka
-#   ./compose.sh ./CLAUDE.md base spark-scala
+#   ./compose.sh ./CLAUDE.md base spark-java
 #
 # Available layers:
 #   base           — Universal engineering standards (always include this)
 #   spring-boot    — Spring Boot backend standards
 #   react          — React/TypeScript frontend standards
 #   kafka          — Apache Kafka messaging standards
-#   spark-scala    — Apache Spark/Scala data processing standards
+#   spark-java    — Apache Spark/Java data processing standards
 #   domain         — Domain context (copy TEMPLATE.md, fill in, then reference here)
 #
 # The script looks for layers in the following locations:
@@ -35,7 +35,7 @@ if [[ $# -lt 2 ]]; then
     echo "  $0 ./CLAUDE.md base spring-boot react"
     echo "  $0 ./CLAUDE.md base spring-boot kafka"
     echo ""
-    echo "Available layers: base, spring-boot, react, kafka, spark-scala, domain"
+    echo "Available layers: base, spring-boot, react, kafka, spark-java, domain"
     exit 1
 fi
 
@@ -76,7 +76,7 @@ for LAYER in "$@"; do
 
     if [[ ! -f "$LAYER_FILE" ]]; then
         echo "ERROR: Layer file not found: $LAYER_FILE"
-        echo "  Did you mean one of: base, spring-boot, react, kafka, spark-scala, domain?"
+        echo "  Did you mean one of: base, spring-boot, react, kafka, spark-java, domain?"
         exit 1
     fi
 

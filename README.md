@@ -16,7 +16,7 @@ claude-code-starter-kit/
 │   │   ├── spring-boot/CLAUDE.md   # Spring Boot conventions
 │   │   ├── react/CLAUDE.md         # React/TypeScript conventions
 │   │   ├── kafka/CLAUDE.md         # Kafka messaging conventions
-│   │   └── spark-scala/CLAUDE.md   # Spark/Scala conventions
+│   │   └── spark-java/CLAUDE.md   # Spark/Java conventions
 │   ├── domain/TEMPLATE.md    # Domain context template (fill per project)
 │   └── compose.sh            # Script to assemble layers into one CLAUDE.md
 ├── commands/                  # Claude Code custom commands
@@ -68,7 +68,7 @@ The CLAUDE.md layer system lets you compose a project-specific `CLAUDE.md` from 
 | Spring Boot | `layers/tech/spring-boot/CLAUDE.md` | Entity patterns, repository conventions, service/controller design, DTOs, Flyway, testing, multi-tenancy. |
 | React | `layers/tech/react/CLAUDE.md` | Project structure, components, state management, API integration, routing, forms, Tailwind, testing. |
 | Kafka | `layers/tech/kafka/CLAUDE.md` | Producers, consumers, topic naming, error handling, dead letter topics, schema management, testing. |
-| Spark/Scala | `layers/tech/spark-scala/CLAUDE.md` | Job structure, Scala conventions, DataFrame/Dataset patterns, schema definitions, testing. |
+| Spark/Java | `layers/tech/spark-java/CLAUDE.md` | Spring Boot integration, job structure, Java conventions, DataFrame patterns, schema definitions, testing. |
 | Domain | `layers/domain/TEMPLATE.md` | Template for project-specific business context. Copy and fill in for each project. |
 
 ### Composing a CLAUDE.md
@@ -105,7 +105,7 @@ Copy the contents of each layer you need into your project's `CLAUDE.md`, adding
 | Spring Boot + React SaaS | base + spring-boot + react + domain |
 | Spring Boot + Kafka | base + spring-boot + kafka + domain |
 | Full stack with events | base + spring-boot + react + kafka + domain |
-| Spark data pipeline | base + spark-scala + domain |
+| Spark data pipeline | base + spark-java + domain |
 
 ### Customising Layers
 
