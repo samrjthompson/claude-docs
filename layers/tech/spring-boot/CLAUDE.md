@@ -6,6 +6,144 @@ These standards target Spring Boot 4+ with Java 21+, Maven, and Keycloak for aut
 
 ---
 
+## Project Scaffolding
+
+### Principle
+
+Start with the absolute minimum needed to compile and run. Do not scaffold security configuration, exception handling, multi-tenancy, common packages, OpenAPI config, or any feature code before a feature exists that needs them. Every file added to a project should be justified by a concrete, immediate requirement.
+
+### Initial File Set
+
+A brand new project contains exactly four files:
+
+```
+.gitignore
+pom.xml
+src/main/java/com/example/app/Application.java
+src/main/resources/application.properties
+```
+
+Nothing else. No `common/` package, no `config/` package, no `SecurityConfig`, no `ControllerExceptionHandler`, no `TenantInterceptor`.
+
+### pom.xml
+
+Use `spring-boot-starter-parent` at the latest stable 4.x version. Java 21. A single dependency: `spring-boot-starter-web`. Include the Spring Boot Maven plugin.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.3</version>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>my-app</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>my-app</name>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+### Application.java
+
+The main class is `@SpringBootApplication` only. No additional annotations, no bean definitions, no configuration.
+
+```java
+package com.example.app;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+### application.properties
+
+One property only at project creation:
+
+```properties
+spring.application.name=my-app
+```
+
+Add further properties only when they are needed by a feature being implemented.
+
+### CLAUDE.md Project Setup Section
+
+When scaffolding a new project, add a `## Project Setup` section to the project's `CLAUDE.md` that documents the project coordinates, technology versions, common commands, and default port. This gives Claude Code durable, session-independent context about the project. Example:
+
+```markdown
+## Project Setup
+
+- **Group ID**: `com.example`
+- **Artifact ID**: `my-app`
+- **Base package**: `com.example.app`
+- **Spring Boot**: 4.0.3
+- **Java**: 21
+
+### Common Commands
+
+- **Build**: `mvn compile`
+- **Run**: `mvn spring-boot:run`
+- **Test**: `mvn test`
+- **Package**: `mvn package`
+
+### Default Port
+
+The application runs on port **8080** by default.
+```
+
+### When to Add More
+
+Add infrastructure only when the first feature that needs it is being implemented:
+
+- **Security config** (`SecurityConfig`, OAuth2/JWT setup) — when the first secured endpoint is added.
+- **Exception hierarchy and `ControllerExceptionHandler`** — when the first feature needs consistent error responses.
+- **Multi-tenancy** (`TenantContext`, `TenantInterceptor`) — when the first multi-tenant feature is added.
+- **`common/` package** — when a third feature needs a type that already exists in two other features.
+- **`config/` package** — when a configuration class is actually needed.
+- **Additional dependencies** (security, JPA, Kafka, etc.) — when the feature that uses them is implemented, not before.
+
+Resist the urge to add "foundation" code speculatively. A project with one feature and minimal infrastructure is easier to understand and change than one pre-loaded with unused scaffolding.
+
+---
+
 ## Java Conventions
 
 ### Type Declarations
