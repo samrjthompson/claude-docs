@@ -864,6 +864,7 @@ public final class BillingTestFixtures {
 ### Testing Rules
 
 - Use `@WebMvcTest` for controller tests — fast, focused, mock the service layer.
+- `MockMvc` must be imported from `org.springframework.test.web.servlet.MockMvc` (Spring Boot 4+).
 - Use `@ExtendWith(MockitoExtension.class)` with `@Mock` and `@InjectMocks` for service unit tests.
 - Repository test patterns (annotations, test containers, database setup) are defined by the database layer.
 - Use JUnit Jupiter assertions (`assertEquals`, `assertThrows`, etc.) instead of AssertJ (`assertThat`).
