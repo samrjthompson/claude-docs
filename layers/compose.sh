@@ -13,9 +13,13 @@
 # Available layers:
 #   base           — Universal engineering standards (always include this)
 #   spring-boot    — Spring Boot backend standards
+#   mysql          — MySQL/JPA/Flyway database standards
+#   postgres       — PostgreSQL/JPA/Flyway database standards
+#   mongodb        — MongoDB/Spring Data Mongo database standards
+#   dynamodb       — DynamoDB/Spring Data DynamoDB database standards
 #   react          — React/TypeScript frontend standards
 #   kafka          — Apache Kafka messaging standards
-#   spark-java    — Apache Spark/Java data processing standards
+#   spark-java     — Apache Spark/Java data processing standards
 #   domain         — Domain context (copy TEMPLATE.md, fill in, then reference here)
 #
 # The script looks for layers in the following locations:
@@ -35,7 +39,7 @@ if [[ $# -lt 2 ]]; then
     echo "  $0 ./CLAUDE.md base spring-boot react"
     echo "  $0 ./CLAUDE.md base spring-boot kafka"
     echo ""
-    echo "Available layers: base, spring-boot, react, kafka, spark-java, domain"
+    echo "Available layers: base, spring-boot, mysql, postgres, mongodb, dynamodb, react, kafka, spark-java, domain"
     exit 1
 fi
 
@@ -76,7 +80,7 @@ for LAYER in "$@"; do
 
     if [[ ! -f "$LAYER_FILE" ]]; then
         echo "ERROR: Layer file not found: $LAYER_FILE"
-        echo "  Did you mean one of: base, spring-boot, react, kafka, spark-java, domain?"
+        echo "  Did you mean one of: base, spring-boot, mysql, postgres, mongodb, dynamodb, react, kafka, spark-java, domain?"
         exit 1
     fi
 

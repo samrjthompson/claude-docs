@@ -12,7 +12,7 @@ The kit has four main components:
 
 ### Layers (`layers/`)
 
-Composable CLAUDE.md documentation modules that get assembled into a single project-specific CLAUDE.md. The `base/CLAUDE.md` layer defines universal engineering standards (naming, testing, errors, git, security) and should be included in every project. Technology layers under `tech/` (spring-boot, react, kafka, spark-java) add stack-specific conventions. The `domain/TEMPLATE.md` is copied and filled in per-project with business context (entities, workflows, terminology, roles).
+Composable CLAUDE.md documentation modules that get assembled into a single project-specific CLAUDE.md. The `base/CLAUDE.md` layer defines universal engineering standards (naming, testing, errors, git, security) and should be included in every project. Technology layers under `tech/` (spring-boot, react, kafka, spark-java) add stack-specific conventions. Database layers (mysql, postgres, mongodb, dynamodb) provide persistence-specific patterns and are composed alongside the Spring Boot layer. The `domain/TEMPLATE.md` is copied and filled in per-project with business context (entities, workflows, terminology, roles).
 
 Use `layers/compose.sh` to assemble layers:
 ```bash
@@ -49,8 +49,10 @@ Structured prompts for complex multi-step scenarios (system design, debugging, p
 
 | Project Type | Layers |
 |---|---|
-| Spring Boot API | base + spring-boot + domain |
-| Spring Boot + React SaaS | base + spring-boot + react + domain |
-| Spring Boot + Kafka | base + spring-boot + kafka + domain |
-| Full stack with events | base + spring-boot + react + kafka + domain |
+| Spring Boot API (MySQL) | base + spring-boot + mysql + domain |
+| Spring Boot API (Postgres) | base + spring-boot + postgres + domain |
+| Spring Boot + React SaaS | base + spring-boot + mysql + react + domain |
+| Spring Boot + Kafka | base + spring-boot + postgres + kafka + domain |
+| Full stack with events | base + spring-boot + mysql + react + kafka + domain |
+| Spring Boot + MongoDB | base + spring-boot + mongodb + domain |
 | Spark data pipeline | base + spark-java + domain |

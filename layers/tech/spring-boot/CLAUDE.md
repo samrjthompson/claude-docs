@@ -2,7 +2,7 @@
 
 This layer defines conventions and patterns for Spring Boot applications. It builds on the base engineering standards and specifies how those principles apply to Spring Boot projects.
 
-These standards target Spring Boot 4+ with Java 21+, Spring Data JPA, Flyway, Maven, and Keycloak for authentication.
+These standards target Spring Boot 4+ with Java 21+, Maven, and Keycloak for authentication. Database and persistence concerns are provided by a separate database layer (e.g., `mysql`, `postgres`, `mongodb`).
 
 ---
 
@@ -16,7 +16,6 @@ com.example.app/
 ├── billing/
 │   ├── BillingController.java
 │   ├── BillingService.java
-│   ├── InvoiceRepository.java
 │   ├── Invoice.java
 │   ├── InvoiceLineItem.java
 │   ├── CreateInvoiceRequest.java
@@ -30,7 +29,6 @@ com.example.app/
 ├── customer/
 │   ├── CustomerController.java
 │   ├── CustomerService.java
-│   ├── CustomerRepository.java
 │   ├── Customer.java
 │   ├── CreateCustomerRequest.java
 │   ├── UpdateCustomerRequest.java
@@ -38,19 +36,15 @@ com.example.app/
 │   ├── CustomerMapper.java
 │   └── CustomerNotFoundException.java
 ├── common/
-│   ├── BaseEntity.java
 │   ├── ErrorResponse.java
 │   ├── ErrorDetail.java
 │   ├── GlobalExceptionHandler.java
 │   ├── PageResponse.java
 │   ├── TenantContext.java
-│   ├── TenantInterceptor.java
-│   └── AuditingConfig.java
+│   └── TenantInterceptor.java
 └── config/
     ├── SecurityConfig.java
-    ├── JpaConfig.java
     ├── WebConfig.java
-    ├── FlywayConfig.java
     └── OpenApiConfig.java
 ```
 
@@ -58,8 +52,8 @@ com.example.app/
 
 Each feature package is self-contained. It holds every class needed for that feature to function:
 
-- **Entity classes** — JPA entities representing the feature's domain objects.
-- **Repository interfaces** — Data access for the feature's entities.
+- **Domain model classes** — Classes representing the feature's domain objects. Persistence annotations are defined by the database layer.
+- **Repository interfaces** — Data access for the feature's domain objects. Defined by the database layer.
 - **Service class** — Business logic, transaction management, orchestration.
 - **Controller class** — REST endpoints, request handling, response formatting.
 - **Request DTOs** — Objects representing inbound API data, annotated with Bean Validation.
@@ -74,7 +68,6 @@ A feature package never reaches into another feature's repository. Cross-feature
 
 The `common` package holds genuinely cross-cutting concerns used across three or more features:
 
-- `BaseEntity` with auditing fields.
 - `GlobalExceptionHandler` mapping exceptions to error responses.
 - `ErrorResponse` and `ErrorDetail` DTOs for consistent error formatting.
 - `PageResponse` wrapper for paginated results.
@@ -83,174 +76,12 @@ The `common` package holds genuinely cross-cutting concerns used across three or
 The `config` package holds Spring configuration classes:
 
 - Security configuration.
-- JPA/Hibernate configuration.
 - Web MVC configuration.
-- Flyway configuration.
 - OpenAPI/Swagger configuration.
 
+Database and persistence configuration classes are provided by the database layer.
+
 Do not put business logic in `common` or `config`. If a utility class contains business rules, it belongs in a feature package.
-
----
-
-## Entity Design Patterns
-
-### Base Entity
-
-Every entity extends `BaseEntity`:
-
-```java
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-
-    @CreatedDate
-    @Column(name = "created_at", updatable = false, nullable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
-    @Version
-    @Column(name = "version", nullable = false)
-    private Long version;
-
-    @Column(name = "tenant_id", updatable = false, nullable = false)
-    private String tenantId;
-
-    // Getters only — no setters for id, createdAt, tenantId
-}
-```
-
-**Rules:**
-- Use UUID primary keys. Never use auto-increment integers. UUIDs are safe across distributed systems, prevent enumeration attacks, and simplify data migration.
-- Use `Instant` for all timestamps. Never `LocalDateTime` — always store UTC.
-- Use optimistic locking via `@Version` on every entity.
-- Include `tenantId` on every entity for multi-tenancy filtering.
-- Enable JPA auditing with `@EnableJpaAuditing` in configuration.
-
-### Relationship Mapping
-
-- **OneToMany/ManyToOne**: Always map the owning side (ManyToOne). Use `@ManyToOne(fetch = FetchType.LAZY)` — never `EAGER`. Define the inverse side only when you need to navigate the relationship from the parent.
-- **ManyToMany**: Use a join table with an explicit entity when the relationship has attributes. Use `@ManyToMany` only for simple join tables with no additional columns.
-- **Cascade**: Use `CascadeType.ALL` only for true parent-child compositions (e.g., Order → OrderLineItems where line items cannot exist without the order). Never cascade from child to parent.
-- **Orphan removal**: Enable `orphanRemoval = true` on parent-side `@OneToMany` for composition relationships.
-
-```java
-@Entity
-@Table(name = "invoices")
-public class Invoice extends BaseEntity {
-
-    @Column(name = "invoice_number", nullable = false, unique = true)
-    private String invoiceNumber;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
-
-    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<InvoiceLineItem> lineItems = new ArrayList<>();
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private InvoiceStatus status;
-
-    @Column(name = "total_amount", nullable = false, precision = 19, scale = 4)
-    private BigDecimal totalAmount;
-
-    // Business methods on the entity for encapsulating invariants
-    public void addLineItem(InvoiceLineItem item) {
-        lineItems.add(item);
-        item.setInvoice(this);
-        recalculateTotal();
-    }
-
-    public void markAsPaid() {
-        if (this.status == InvoiceStatus.PAID) {
-            throw new InvoiceAlreadyPaidException(this.getId());
-        }
-        this.status = InvoiceStatus.PAID;
-    }
-
-    private void recalculateTotal() {
-        this.totalAmount = lineItems.stream()
-                .map(InvoiceLineItem::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-}
-```
-
-### Entity Rules
-
-- Entities encapsulate their invariants. Validation that protects data integrity lives on the entity as business methods. The service layer calls these methods — it does not manipulate entity fields directly for complex operations.
-- Use `@Enumerated(EnumType.STRING)` — never `EnumType.ORDINAL`. Ordinal breaks when enum values are reordered.
-- Use `BigDecimal` for all monetary values. Specify `precision` and `scale` explicitly.
-- Initialise collections inline: `private List<LineItem> lineItems = new ArrayList<>()`. Never leave collection fields null.
-- Do not put JSON serialization annotations (`@JsonProperty`, `@JsonIgnore`) on entities. Entities never touch the API boundary.
-
----
-
-## Repository Patterns
-
-### When to Use Each Query Style
-
-**Derived queries** — for simple queries with one or two conditions:
-```java
-public interface CustomerRepository extends JpaRepository<Customer, UUID> {
-    Optional<Customer> findByEmailAndTenantId(String email, String tenantId);
-    List<Customer> findByStatusAndTenantId(CustomerStatus status, String tenantId);
-    boolean existsByEmailAndTenantId(String email, String tenantId);
-}
-```
-
-**@Query annotation** — for queries with joins, aggregations, or complex WHERE clauses:
-```java
-@Query("""
-    SELECT i FROM Invoice i
-    JOIN FETCH i.customer
-    WHERE i.tenantId = :tenantId
-    AND i.status = :status
-    AND i.createdAt >= :since
-    ORDER BY i.createdAt DESC
-    """)
-List<Invoice> findRecentByStatus(
-        @Param("tenantId") String tenantId,
-        @Param("status") InvoiceStatus status,
-        @Param("since") Instant since);
-```
-
-**Specifications** — for dynamic queries where the combination of filters varies at runtime (search endpoints, admin dashboards):
-```java
-public class InvoiceSpecifications {
-
-    public static Specification<Invoice> withTenant(String tenantId) {
-        return (root, query, cb) -> cb.equal(root.get("tenantId"), tenantId);
-    }
-
-    public static Specification<Invoice> withStatus(InvoiceStatus status) {
-        return status == null ? null :
-                (root, query, cb) -> cb.equal(root.get("status"), status);
-    }
-
-    public static Specification<Invoice> createdAfter(Instant since) {
-        return since == null ? null :
-                (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), since);
-    }
-}
-```
-
-### Repository Rules
-
-- Every query method that returns entity data must filter by `tenantId`. No exceptions. This prevents cross-tenant data leakage.
-- Return `Optional<T>` for single-entity lookups. Never return null.
-- Use `@EntityGraph` or `JOIN FETCH` to prevent N+1 queries when you know the relationship will be accessed.
-- Never return entities directly from repositories to controllers. Always pass through the service layer.
-- Use `Page<T>` for list endpoints that could return large result sets.
 
 ---
 
@@ -309,7 +140,7 @@ public class BillingService {
 ```
 
 **Rules:**
-- Class-level `@Transactional(readOnly = true)` as default. Override with `@Transactional` on mutating methods.
+- Class-level `@Transactional(readOnly = true)` as default. Override with `@Transactional` on mutating methods. `@Transactional` applies when the persistence layer supports Spring-managed transactions. The database layer specifies transaction behaviour.
 - Constructor injection only. No `@Autowired` on fields. Final fields preferred.
 - One service class per feature. If a service exceeds ~300 lines, the feature is too large — split it.
 - Services return Response DTOs, never entities, to the controller. Services may accept and return entities to other services within the same feature.
@@ -561,69 +392,32 @@ public final class InvoiceMapper {
 
 ## Configuration Management
 
-### application.yml Structure
+### application.properties Structure
 
-```yaml
-spring:
-  application:
-    name: my-service
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+```properties
+# application.properties
+spring.application.name=my-service
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:local}
+```
 
----
-# Local development profile
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    url: jdbc:mysql://localhost:3306/mydb
-    username: root
-    password: local-password
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
+```properties
+# application-local.properties
+server.port=8080
+logging.level.com.example.app=DEBUG
+```
 
-server:
-  port: 8080
-
-logging:
-  level:
-    com.example.app: DEBUG
-    org.hibernate.SQL: DEBUG
-
----
-# Production profile
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-  jpa:
-    show-sql: false
-    hibernate:
-      ddl-auto: validate
-
-logging:
-  level:
-    com.example.app: INFO
-    root: WARN
+```properties
+# application-prod.properties
+logging.level.com.example.app=INFO
+logging.level.root=WARN
 ```
 
 ### Configuration Rules
 
-- Use `application.yml`, not `application.properties`. YAML is more readable for nested configuration.
-- Profile-specific configuration in the same file using `---` separators and `spring.config.activate.on-profile`.
-- Externalise all secrets and environment-specific values. Use environment variables in production: `${DATABASE_URL}`.
+- Use `application.properties`. Use profile-specific files (`application-local.properties`, `application-prod.properties`) for environment overrides.
+- Externalise all secrets and environment-specific values. Use environment variables in production.
 - Never commit secrets to version control. Use `.env` files locally (gitignored) and environment variables or secrets managers in production.
-- Set `ddl-auto: validate` — always. Hibernate never creates or modifies schema. Flyway handles all schema changes.
+- Database-specific configuration (connection details, dialect, migration tools) is provided by the database layer.
 - Use `@ConfigurationProperties` for custom configuration with type safety and validation.
 
 ---
@@ -707,58 +501,6 @@ public class InvoiceNotFoundException extends ResourceNotFoundException {
 
 ---
 
-## Flyway Migration Conventions
-
-### Naming
-
-```
-V{version}__{description}.sql
-
-Examples:
-V001__create_customers_table.sql
-V002__create_invoices_table.sql
-V003__add_status_column_to_invoices.sql
-V004__create_invoice_line_items_table.sql
-V005__seed_initial_roles.sql
-```
-
-- Version numbers: zero-padded three digits (`V001`, `V002`).
-- Description: `snake_case`, descriptive of the change.
-- Double underscore between version and description (Flyway convention).
-
-### Migration Rules
-
-- **Every schema change goes through Flyway.** No manual SQL, no Hibernate auto-DDL.
-- **Migrations are immutable.** Once committed, never edit a migration. Create a new migration for corrections.
-- **Separate schema migrations from data migrations.** Schema changes and data seeding are different migrations even if related.
-- **Make migrations idempotent where possible.** Use `IF NOT EXISTS` for table and index creation.
-- **Include rollback comments.** At the top of each migration, add a comment block showing the rollback SQL:
-
-```sql
--- Migration: V003__add_status_column_to_invoices.sql
--- Rollback: ALTER TABLE invoices DROP COLUMN status;
-
-ALTER TABLE invoices ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'DRAFT';
-CREATE INDEX idx_invoices_status ON invoices (status);
-```
-
-- **Foreign keys reference UUID columns:** `customer_id CHAR(36) NOT NULL`.
-- **Always specify NOT NULL, defaults, and constraints** explicitly. Never rely on database defaults.
-
-### Migration for Multi-Tenancy
-
-When using schema-per-tenant, maintain two migration locations:
-
-```yaml
-spring:
-  flyway:
-    locations:
-      - classpath:db/migration/common    # Shared schema (tenant registry)
-      - classpath:db/migration/tenant    # Per-tenant schema
-```
-
----
-
 ## Testing Patterns for Spring Boot
 
 ### Test Structure
@@ -768,12 +510,10 @@ src/test/java/com/example/app/
 ├── billing/
 │   ├── BillingControllerTest.java      # MockMvc integration tests
 │   ├── BillingServiceTest.java         # Service unit/integration tests
-│   ├── InvoiceRepositoryTest.java      # Repository tests with TestContainers
 │   ├── InvoiceMapperTest.java          # Mapper unit tests
 │   └── BillingTestFixtures.java        # Test data builders
 ├── customer/
 │   └── ...
-└── TestContainersConfig.java           # Shared TestContainers configuration
 ```
 
 ### Controller Tests (MockMvc)
@@ -867,44 +607,7 @@ class BillingServiceTest {
 }
 ```
 
-### Repository Tests
-
-```java
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
-class InvoiceRepositoryTest {
-
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-    }
-
-    @Autowired
-    private InvoiceRepository invoiceRepository;
-
-    @Test
-    void findRecentByStatus_returnsOnlyMatchingTenantAndStatus() {
-        // Arrange — persist test data
-
-        // Act
-        List<Invoice> results = invoiceRepository.findRecentByStatus(
-                "tenant-1", InvoiceStatus.DRAFT, Instant.now().minus(30, ChronoUnit.DAYS));
-
-        // Assert
-        assertThat(results).allSatisfy(invoice -> {
-            assertThat(invoice.getTenantId()).isEqualTo("tenant-1");
-            assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
-        });
-    }
-}
-```
+`@Transactional` rollback in service tests depends on the persistence layer supporting Spring-managed transactions. Repository-level tests (annotations, test containers, database setup) are defined by the database layer.
 
 ### Test Fixtures
 
@@ -954,8 +657,7 @@ public final class BillingTestFixtures {
 
 - Use `@WebMvcTest` for controller tests — fast, focused, mock the service layer.
 - Use `@SpringBootTest` with `@Transactional` for service integration tests — test real service + repository interactions with automatic rollback.
-- Use `@DataJpaTest` with TestContainers for repository tests — test real SQL against a real database.
-- Use TestContainers for MySQL. Never use H2 for tests — dialect differences cause false positives.
+- Repository test patterns (annotations, test containers, database setup) are defined by the database layer.
 - Use AssertJ for assertions. It is more readable and expressive than JUnit's built-in assertions.
 - Use the `BillingTestFixtures` pattern for every feature — centralised, reusable test data construction.
 
@@ -1012,24 +714,16 @@ public class SecurityConfig {
 
 ## Actuator and Health Checks
 
-```yaml
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, metrics, prometheus
-  endpoint:
-    health:
-      show-details: when-authorized
-  health:
-    db:
-      enabled: true
-    diskspace:
-      enabled: true
+```properties
+management.endpoints.web.exposure.include=health, info, metrics, prometheus
+management.endpoint.health.show-details=when-authorized
+management.health.db.enabled=false
+management.health.diskspace.enabled=true
 ```
 
 - Expose only necessary actuator endpoints.
 - Health check shows details only to authenticated users.
+- Database health checks are disabled by default. Database layers override `management.health.db.enabled` to `true`.
 - Add custom health indicators for critical dependencies (Kafka connectivity, external API availability).
 - Expose Prometheus metrics endpoint for monitoring.
 
@@ -1087,24 +781,10 @@ public final class TenantContext {
 }
 ```
 
-### Schema-per-Tenant Routing
-
-For schema-per-tenant architecture, implement a `TenantAwareDataSource` that routes to the correct schema based on `TenantContext`:
-
-```java
-public class TenantRoutingDataSource extends AbstractRoutingDataSource {
-
-    @Override
-    protected Object determineCurrentLookupKey() {
-        return TenantContext.getCurrentTenant();
-    }
-}
-```
-
 ### Multi-Tenancy Rules
 
 - Tenant ID comes from the JWT token only. Never from request parameters, headers, or path variables.
-- Every database query includes a tenant filter. Use a Hibernate filter or explicit WHERE clause.
-- Every entity includes a `tenant_id` column.
+- Every data access operation includes a tenant filter. The database layer specifies how tenant filtering is applied.
+- Every domain object includes a `tenantId` field.
 - Test with multiple tenants in integration tests to verify data isolation.
 - Tenant context is set in an interceptor and cleared after the request completes. Always clear to prevent thread-local leakage.
