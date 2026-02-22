@@ -97,7 +97,7 @@ com.example.app/
 ├── common/                           # Shared cross-cutting code
 │   ├── BaseEntity.java
 │   ├── ErrorResponse.java
-│   ├── GlobalExceptionHandler.java
+│   ├── ControllerExceptionHandler.java
 │   └── TenantContext.java
 └── config/                           # Application configuration
     ├── SecurityConfig.java
@@ -121,7 +121,7 @@ com.example.app/
 
 ### The `common` Package
 
-Use `common` sparingly. Code belongs in `common` only if it is genuinely used across three or more features AND has no feature-specific logic. Typical residents: base entity class, global exception handler, shared configuration, cross-cutting DTOs like pagination and error responses.
+Use `common` sparingly. Code belongs in `common` only if it is genuinely used across three or more features AND has no feature-specific logic. Typical residents: base entity class, controller exception handler, shared configuration, cross-cutting DTOs like pagination and error responses.
 
 If something is used by only two features, put it in the feature that owns the concept and let the other feature depend on it.
 
@@ -195,6 +195,11 @@ These rules define how Claude Code should operate when working on projects that 
 - If there is no existing pattern to follow, apply the principles in this base layer (readability, simplicity, consistency) and state your reasoning.
 - Never silently make assumptions about business logic. If the requirements are ambiguous about business rules, ask.
 - Technical implementation decisions (which data structure, which algorithm, which library API) do not require asking — use your best judgement and explain the choice if it is non-obvious.
+
+### Language
+
+- Use British English spelling and grammar in all communication, comments, documentation, and generated text unless explicitly instructed otherwise. For example: `colour` not `color`, `organised` not `organized`, `behaviour` not `behavior`, `authorisation` not `authorization`.
+- Technical terms, code identifiers, and third-party API names retain their original spelling regardless of this rule.
 
 ## Testing Philosophy
 

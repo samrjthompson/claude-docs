@@ -6,6 +6,52 @@ These standards target Spring Boot 4+ with Java 21+, Maven, and Keycloak for aut
 
 ---
 
+## Java Conventions
+
+### Type Declarations
+
+Always use explicit types instead of `var`. This improves code readability and makes types immediately clear.
+
+```java
+// Good
+String name = "example";
+List<User> users = userService.findAll();
+Optional<Invoice> invoice = invoiceRepository.findById(id);
+
+// Bad
+var name = "example";
+var users = userService.findAll();
+var invoice = invoiceRepository.findById(id);
+```
+
+### `final` Usage
+
+For `String` and primitives, always use `final` where the property is not mutated.
+
+```java
+// Good
+final String email = "frodo.baggins@email.com";
+final int yearOfBirth = 2968;
+final boolean isAHobbit = true;
+
+// Also good
+public void doSomething(final String something) {
+    // Logic where "something" doesn't need to mutate...
+}
+```
+
+While these values can change over time, if they do not change at runtime then they should be `final`. For example, an email address might change, but the email in the current request does not change, and so should be `final`.
+
+Use `final` on method parameters when they should not be reassigned.
+
+Do not use `final` on non-primitive objects unless there is a risk of altering the object's reference.
+
+### Primitive Types
+
+Use primitives where applicable. If a `Boolean` wrapper is not required, use `boolean`. Prefer `int` over `Integer`, `long` over `Long`, etc., unless the null case is genuinely needed.
+
+---
+
 ## Package-by-Feature Organisation
 
 ### Example Package Structure
@@ -14,31 +60,40 @@ These standards target Spring Boot 4+ with Java 21+, Maven, and Keycloak for aut
 com.example.app/
 ├── Application.java
 ├── billing/
-│   ├── BillingController.java
-│   ├── BillingService.java
-│   ├── Invoice.java
-│   ├── InvoiceLineItem.java
-│   ├── CreateInvoiceRequest.java
-│   ├── UpdateInvoiceRequest.java
-│   ├── InvoiceResponse.java
-│   ├── InvoiceSummaryResponse.java
-│   ├── InvoiceMapper.java
+│   ├── api/
+│   │   ├── BillingController.java
+│   │   ├── CreateInvoiceRequest.java
+│   │   ├── UpdateInvoiceRequest.java
+│   │   ├── InvoiceResponse.java
+│   │   ├── InvoiceSummaryResponse.java
+│   │   └── InvoiceMapper.java
+│   ├── service/
+│   │   └── BillingService.java
+│   ├── repository/
+│   │   └── InvoiceRepository.java
+│   ├── entity/
+│   │   ├── Invoice.java
+│   │   ├── InvoiceLineItem.java
+│   │   └── InvoiceStatus.java
 │   ├── InvoiceNotFoundException.java
-│   ├── InvoiceAlreadyPaidException.java
-│   └── InvoiceStatus.java
+│   └── InvoiceAlreadyPaidException.java
 ├── customer/
-│   ├── CustomerController.java
-│   ├── CustomerService.java
-│   ├── Customer.java
-│   ├── CreateCustomerRequest.java
-│   ├── UpdateCustomerRequest.java
-│   ├── CustomerResponse.java
-│   ├── CustomerMapper.java
+│   ├── api/
+│   │   ├── CustomerController.java
+│   │   ├── CreateCustomerRequest.java
+│   │   ├── UpdateCustomerRequest.java
+│   │   ├── CustomerResponse.java
+│   │   └── CustomerMapper.java
+│   ├── service/
+│   │   └── CustomerService.java
+│   ├── repository/
+│   ├── entity/
+│   │   └── Customer.java
 │   └── CustomerNotFoundException.java
 ├── common/
 │   ├── ErrorResponse.java
 │   ├── ErrorDetail.java
-│   ├── GlobalExceptionHandler.java
+│   ├── ControllerExceptionHandler.java
 │   ├── PageResponse.java
 │   ├── TenantContext.java
 │   └── TenantInterceptor.java
@@ -50,17 +105,13 @@ com.example.app/
 
 ### Feature Package Rules
 
-Each feature package is self-contained. It holds every class needed for that feature to function:
+Each feature package is self-contained. It holds every class needed for that feature to function, organised into sub-packages by layer:
 
-- **Domain model classes** — Classes representing the feature's domain objects. Persistence annotations are defined by the database layer.
-- **Repository interfaces** — Data access for the feature's domain objects. Defined by the database layer.
-- **Service class** — Business logic, transaction management, orchestration.
-- **Controller class** — REST endpoints, request handling, response formatting.
-- **Request DTOs** — Objects representing inbound API data, annotated with Bean Validation.
-- **Response DTOs** — Objects representing outbound API data.
-- **Mapper class** — Static methods converting between entities and DTOs.
-- **Feature-specific exceptions** — Exceptions unique to this feature's error conditions.
-- **Enums and value objects** — Feature-specific types.
+- **`api/` sub-package** — Controllers, request DTOs, response DTOs, and mapper classes.
+- **`service/` sub-package** — Service classes containing business logic, transaction management, and orchestration.
+- **`repository/` sub-package** — Repository interfaces for data access. Defined by the database layer.
+- **`entity/` sub-package** — Domain model classes representing the feature's domain objects. Persistence annotations are defined by the database layer. Enums and value objects specific to domain entities also live here.
+- **Feature package root** — Feature-specific exceptions and test fixtures.
 
 A feature package never reaches into another feature's repository. Cross-feature communication goes through the other feature's service.
 
@@ -68,7 +119,7 @@ A feature package never reaches into another feature's repository. Cross-feature
 
 The `common` package holds genuinely cross-cutting concerns used across three or more features:
 
-- `GlobalExceptionHandler` mapping exceptions to error responses.
+- `ControllerExceptionHandler` mapping exceptions to error responses.
 - `ErrorResponse` and `ErrorDetail` DTOs for consistent error formatting.
 - `PageResponse` wrapper for paginated results.
 - `TenantContext` and `TenantInterceptor` for multi-tenancy.
@@ -177,7 +228,6 @@ public InvoiceResponse payInvoice(UUID invoiceId, String tenantId) {
 
 ```java
 @RestController
-@RequestMapping("/api/v1/invoices")
 @Tag(name = "Invoices", description = "Invoice management endpoints")
 public class BillingController {
 
@@ -187,7 +237,7 @@ public class BillingController {
         this.billingService = billingService;
     }
 
-    @PostMapping
+    @PostMapping("/api/v1/invoices")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new invoice")
     public InvoiceResponse createInvoice(
@@ -197,7 +247,7 @@ public class BillingController {
         return billingService.createInvoice(request, tenantId);
     }
 
-    @GetMapping("/{invoiceId}")
+    @GetMapping("/api/v1/invoices/{invoiceId}")
     @Operation(summary = "Get invoice by ID")
     public InvoiceResponse getInvoice(
             @PathVariable UUID invoiceId,
@@ -206,7 +256,7 @@ public class BillingController {
         return billingService.getInvoice(invoiceId, tenantId);
     }
 
-    @GetMapping
+    @GetMapping("/api/v1/invoices")
     @Operation(summary = "List invoices with optional filters")
     public PageResponse<InvoiceSummaryResponse> listInvoices(
             @RequestParam(defaultValue = "0") int page,
@@ -217,7 +267,7 @@ public class BillingController {
         return billingService.listInvoices(page, size, status, tenantId);
     }
 
-    @PutMapping("/{invoiceId}")
+    @PutMapping("/api/v1/invoices/{invoiceId}")
     @Operation(summary = "Update an existing invoice")
     public InvoiceResponse updateInvoice(
             @PathVariable UUID invoiceId,
@@ -227,7 +277,7 @@ public class BillingController {
         return billingService.updateInvoice(invoiceId, request, tenantId);
     }
 
-    @PostMapping("/{invoiceId}/pay")
+    @PostMapping("/api/v1/invoices/{invoiceId}/pay")
     @Operation(summary = "Mark an invoice as paid")
     public InvoiceResponse payInvoice(
             @PathVariable UUID invoiceId,
@@ -236,7 +286,7 @@ public class BillingController {
         return billingService.payInvoice(invoiceId, tenantId);
     }
 
-    @DeleteMapping("/{invoiceId}")
+    @DeleteMapping("/api/v1/invoices/{invoiceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete a draft invoice")
     public void deleteInvoice(
@@ -258,9 +308,10 @@ public class BillingController {
 - **API versioning**: Use URL path versioning (`/api/v1/`). Bump the version only for breaking changes.
 - **HTTP methods**: `GET` for reads, `POST` for creates, `PUT` for full updates, `PATCH` for partial updates, `DELETE` for deletes. Use `POST` for actions that do not map to CRUD: `POST /api/v1/invoices/{id}/pay`.
 - **Response status codes**: `200` for successful reads and updates, `201` for creates (with `Location` header), `204` for deletes, `400` for validation errors, `404` for not found, `422` for business rule violations.
-- **No business logic in controllers.** Controllers validate input (via `@Valid`), extract the tenant, call the service, and return the response. Nothing else.
+- **No business logic in controllers.** Controllers validate input (via `@Valid`), extract the tenant, call the service, and return the response. Nothing else. Controllers must depend on service classes.
 - **Pagination**: Default page size of 20, maximum of 100. Return pagination metadata in a `PageResponse` wrapper.
 - **Annotate every endpoint** with OpenAPI `@Operation`, `@Tag`, `@ApiResponse` for documentation generation.
+- **Do not use `@RequestMapping` annotations above controller classes.** Always write full paths in the mapping annotations on each method (e.g., `@GetMapping("/api/v1/invoices/{id}")`).
 
 ---
 
@@ -271,6 +322,7 @@ public class BillingController {
 Use Java records for immutability. Apply Bean Validation annotations directly.
 
 ```java
+@Builder
 public record CreateInvoiceRequest(
         @NotNull(message = "Customer ID is required")
         UUID customerId,
@@ -283,6 +335,7 @@ public record CreateInvoiceRequest(
         String notes
 ) {}
 
+@Builder
 public record LineItemRequest(
         @NotBlank(message = "Description is required")
         @Size(max = 255, message = "Description must not exceed 255 characters")
@@ -301,6 +354,7 @@ public record LineItemRequest(
 ### Response DTOs
 
 ```java
+@Builder
 public record InvoiceResponse(
         UUID id,
         String invoiceNumber,
@@ -314,6 +368,7 @@ public record InvoiceResponse(
         Instant updatedAt
 ) {}
 
+@Builder
 public record InvoiceSummaryResponse(
         UUID id,
         String invoiceNumber,
@@ -328,6 +383,7 @@ public record InvoiceSummaryResponse(
 
 - **Request and response DTOs are always separate.** Never reuse a DTO for both input and output.
 - **Use Java records** for DTOs. They are immutable, concise, and automatically generate equals/hashCode/toString.
+- **Use Lombok `@Builder` on records with more than two properties.** Records with three or more components must be annotated with `@Builder` to improve readability at construction sites. Records with one or two properties use their canonical constructor directly. Exception: records annotated with `@ConfigurationProperties` do not require `@Builder` as Spring handles their instantiation.
 - **Create purpose-specific response DTOs.** A list endpoint returning `InvoiceSummaryResponse` with fewer fields is better than returning the full `InvoiceResponse` with fields the caller does not need.
 - **Never expose entity IDs that the client should not use.** If the client does not need `tenantId`, do not include it in the response.
 - **Validation messages are explicit.** Every `@NotNull`, `@NotBlank`, `@Size` has a `message` attribute with a human-readable error description.
@@ -342,41 +398,41 @@ public final class InvoiceMapper {
     private InvoiceMapper() {}
 
     public static InvoiceResponse toResponse(Invoice invoice) {
-        return new InvoiceResponse(
-                invoice.getId(),
-                invoice.getInvoiceNumber(),
-                invoice.getCustomer().getId(),
-                invoice.getCustomer().getName(),
-                invoice.getStatus(),
-                invoice.getTotalAmount(),
-                invoice.getLineItems().stream()
+        return InvoiceResponse.builder()
+                .id(invoice.getId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .customerId(invoice.getCustomer().getId())
+                .customerName(invoice.getCustomer().getName())
+                .status(invoice.getStatus())
+                .totalAmount(invoice.getTotalAmount())
+                .lineItems(invoice.getLineItems().stream()
                         .map(InvoiceMapper::toLineItemResponse)
-                        .toList(),
-                invoice.getNotes(),
-                invoice.getCreatedAt(),
-                invoice.getUpdatedAt()
-        );
+                        .toList())
+                .notes(invoice.getNotes())
+                .createdAt(invoice.getCreatedAt())
+                .updatedAt(invoice.getUpdatedAt())
+                .build();
     }
 
     public static InvoiceSummaryResponse toSummaryResponse(Invoice invoice) {
-        return new InvoiceSummaryResponse(
-                invoice.getId(),
-                invoice.getInvoiceNumber(),
-                invoice.getCustomer().getName(),
-                invoice.getStatus(),
-                invoice.getTotalAmount(),
-                invoice.getCreatedAt()
-        );
+        return InvoiceSummaryResponse.builder()
+                .id(invoice.getId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .customerName(invoice.getCustomer().getName())
+                .status(invoice.getStatus())
+                .totalAmount(invoice.getTotalAmount())
+                .createdAt(invoice.getCreatedAt())
+                .build();
     }
 
     public static LineItemResponse toLineItemResponse(InvoiceLineItem item) {
-        return new LineItemResponse(
-                item.getId(),
-                item.getDescription(),
-                item.getQuantity(),
-                item.getUnitPrice(),
-                item.getAmount()
-        );
+        return LineItemResponse.builder()
+                .id(item.getId())
+                .description(item.getDescription())
+                .quantity(item.getQuantity())
+                .unitPrice(item.getUnitPrice())
+                .amount(item.getAmount())
+                .build();
     }
 }
 ```
@@ -386,6 +442,7 @@ public final class InvoiceMapper {
 - Mapper classes are `final` with a private constructor. All methods are `static`.
 - One mapper class per feature, named `{Feature}Mapper`.
 - Mapping methods are named `toResponse`, `toSummaryResponse`, `toEntity` (when converting request DTOs to entities).
+- When the target record has `@Builder`, prefer the builder pattern over the canonical constructor for readability.
 - If mapping is complex (requires additional service lookups or computed fields), move that logic to the service layer and pass the pre-computed values to the mapper.
 
 ---
@@ -418,55 +475,64 @@ logging.level.root=WARN
 - Externalise all secrets and environment-specific values. Use environment variables in production.
 - Never commit secrets to version control. Use `.env` files locally (gitignored) and environment variables or secrets managers in production.
 - Database-specific configuration (connection details, dialect, migration tools) is provided by the database layer.
-- Use `@ConfigurationProperties` for custom configuration with type safety and validation.
+- Define configurable values (URLs, credentials, paths) in `application.properties` and reference them in `@Configuration` classes using `@Value`.
+- Use `@Value` in constructors with private final properties, not on class properties directly.
+- Do not use static constants for configurable values. All configuration should flow through `application.properties`.
+- Use environment variable defaults in `application.properties` where appropriate: `mysql.url=${DATASOURCE_URL:jdbc:mysql://localhost:3306/db}`
+- Use `@EnableConfigurationProperties` for shared properties. Define a `@ConfigurationProperties` class for type-safe, reusable configuration.
 
 ---
 
 ## Exception Handling
 
-### Global Exception Handler
+### ControllerExceptionHandler
 
 ```java
-@RestControllerAdvice
+@ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+public class ControllerExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
-        return ErrorResponse.of(ex.getErrorCode(), ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidation(ValidationException ex) {
+    public ResponseEntity<ErrorResponse> handleValidation(ValidationException ex) {
         log.warn("Validation failed: {}", ex.getMessage());
-        return ErrorResponse.of(ex.getErrorCode(), ex.getMessage(), ex.getDetails());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage(), ex.getDetails()));
     }
 
     @ExceptionHandler(BusinessRuleException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    public ErrorResponse handleBusinessRule(BusinessRuleException ex) {
+    public ResponseEntity<ErrorResponse> handleBusinessRule(BusinessRuleException ex) {
         log.warn("Business rule violation: {}", ex.getMessage());
-        return ErrorResponse.of(ex.getErrorCode(), ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBeanValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleBeanValidation(MethodArgumentNotValidException ex) {
         List<ErrorDetail> details = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> new ErrorDetail(fe.getField(), fe.getDefaultMessage()))
                 .toList();
         log.warn("Bean validation failed: {} errors", details.size());
-        return ErrorResponse.of("VALIDATION_FAILED", "Request validation failed", details);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of("VALIDATION_FAILED", "Request validation failed", details));
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleUnexpected(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         log.error("Unexpected error", ex);
-        return ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred");
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred"));
     }
 }
 ```
@@ -526,17 +592,17 @@ class BillingControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private BillingService billingService;
 
     @Test
     void createInvoice_withValidRequest_returnsCreated() throws Exception {
-        // Arrange
+        // given
         CreateInvoiceRequest request = BillingTestFixtures.createInvoiceRequest();
         InvoiceResponse response = BillingTestFixtures.invoiceResponse();
-        when(billingService.createInvoice(any(), eq("tenant-1"))).thenReturn(response);
+        when(billingService.createInvoice(any(), any())).thenReturn(response);
 
-        // Act & Assert
+        // when // then
         mockMvc.perform(post("/api/v1/invoices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -548,12 +614,12 @@ class BillingControllerTest {
 
     @Test
     void createInvoice_withMissingCustomerId_returnsBadRequest() throws Exception {
-        // Arrange
+        // given
         String invalidRequest = """
                 { "lineItems": [{ "description": "Item", "quantity": 1, "unitPrice": 10.00 }] }
                 """;
 
-        // Act & Assert
+        // when // then
         mockMvc.perform(post("/api/v1/invoices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidRequest)
@@ -567,47 +633,47 @@ class BillingControllerTest {
 ### Service Tests
 
 ```java
-@SpringBootTest
-@Transactional
+@ExtendWith(MockitoExtension.class)
 class BillingServiceTest {
 
-    @Autowired
-    private BillingService billingService;
+    @Mock
+    private InvoiceRepository invoiceRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    @Mock
+    private CustomerService customerService;
+
+    @InjectMocks
+    private BillingService billingService;
 
     @Test
     void createInvoice_withValidData_persistsAndReturnsInvoice() {
-        // Arrange
+        // given
         Customer customer = BillingTestFixtures.customer("tenant-1");
-        customerRepository.save(customer);
-
         CreateInvoiceRequest request = BillingTestFixtures.createInvoiceRequest(customer.getId());
+        when(customerService.getCustomerEntity(any(), any())).thenReturn(customer);
+        when(invoiceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
+        // when
         InvoiceResponse result = billingService.createInvoice(request, "tenant-1");
 
-        // Assert
-        assertThat(result.invoiceNumber()).isNotBlank();
-        assertThat(result.status()).isEqualTo(InvoiceStatus.DRAFT);
-        assertThat(result.totalAmount()).isEqualByComparingTo("150.00");
+        // then
+        assertNotNull(result.invoiceNumber());
+        assertEquals(InvoiceStatus.DRAFT, result.status());
+        assertEquals(0, new BigDecimal("150.00").compareTo(result.totalAmount()));
     }
 
     @Test
     void payInvoice_whenAlreadyPaid_throwsBusinessRuleException() {
-        // Arrange
+        // given
         Invoice invoice = BillingTestFixtures.paidInvoice("tenant-1");
-        // ... persist invoice
+        when(invoiceRepository.findByIdAndTenantId(any(), any())).thenReturn(Optional.of(invoice));
 
-        // Act & Assert
-        assertThatThrownBy(() -> billingService.payInvoice(invoice.getId(), "tenant-1"))
-                .isInstanceOf(InvoiceAlreadyPaidException.class);
+        // when // then
+        assertThrows(InvoiceAlreadyPaidException.class,
+                () -> billingService.payInvoice(invoice.getId(), "tenant-1"));
     }
 }
 ```
-
-`@Transactional` rollback in service tests depends on the persistence layer supporting Spring-managed transactions. Repository-level tests (annotations, test containers, database setup) are defined by the database layer.
 
 ### Test Fixtures
 
@@ -625,11 +691,15 @@ public final class BillingTestFixtures {
     }
 
     public static CreateInvoiceRequest createInvoiceRequest(UUID customerId) {
-        return new CreateInvoiceRequest(
-                customerId,
-                List.of(new LineItemRequest("Test Item", 3, new BigDecimal("50.00"))),
-                "Test notes"
-        );
+        return CreateInvoiceRequest.builder()
+                .customerId(customerId)
+                .lineItems(List.of(LineItemRequest.builder()
+                        .description("Test Item")
+                        .quantity(3)
+                        .unitPrice(new BigDecimal("50.00"))
+                        .build()))
+                .notes("Test notes")
+                .build();
     }
 
     public static CreateInvoiceRequest createInvoiceRequest() {
@@ -637,18 +707,18 @@ public final class BillingTestFixtures {
     }
 
     public static InvoiceResponse invoiceResponse() {
-        return new InvoiceResponse(
-                UUID.randomUUID(),
-                "INV-2025-001",
-                UUID.randomUUID(),
-                "Test Customer",
-                InvoiceStatus.DRAFT,
-                new BigDecimal("150.00"),
-                List.of(),
-                "Test notes",
-                Instant.now(),
-                Instant.now()
-        );
+        return InvoiceResponse.builder()
+                .id(UUID.randomUUID())
+                .invoiceNumber("INV-2025-001")
+                .customerId(UUID.randomUUID())
+                .customerName("Test Customer")
+                .status(InvoiceStatus.DRAFT)
+                .totalAmount(new BigDecimal("150.00"))
+                .lineItems(List.of())
+                .notes("Test notes")
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 }
 ```
@@ -656,10 +726,30 @@ public final class BillingTestFixtures {
 ### Testing Rules
 
 - Use `@WebMvcTest` for controller tests — fast, focused, mock the service layer.
-- Use `@SpringBootTest` with `@Transactional` for service integration tests — test real service + repository interactions with automatic rollback.
+- Use `@ExtendWith(MockitoExtension.class)` with `@Mock` and `@InjectMocks` for service unit tests.
 - Repository test patterns (annotations, test containers, database setup) are defined by the database layer.
-- Use AssertJ for assertions. It is more readable and expressive than JUnit's built-in assertions.
+- Use JUnit Jupiter assertions (`assertEquals`, `assertThrows`, etc.) instead of AssertJ (`assertThat`).
 - Use the `BillingTestFixtures` pattern for every feature — centralised, reusable test data construction.
+- Do not run backend tests if no backend code changes.
+- TDD where possible. Write unit tests that build out production code incrementally. Aim for 100% test coverage with unit tests in all packages except config packages.
+
+### Integration Tests
+
+- Do not use `application-test.properties`. Use `@DynamicPropertySource` in an `AbstractIT` class that serves as the parent for all integration tests.
+- Use only one `<Domain>ControllerIT.java` integration test class per domain. Do not create multiple integration test classes per package (e.g., no separate `RepositoryIT` classes).
+- For anything other than the controller integration test, write unit tests with mocked dependencies.
+- `MainIT` should never extend `AbstractIT`. It tests application startup and health endpoints, not database functionality.
+
+### Database State
+
+- Reset the database before each test to ensure test isolation. Use `@Sql` annotation on `AbstractIT` to run a truncation script before each test method.
+- Place the truncation script at `src/test/resources/truncate-tables.sql`.
+- Disable foreign key checks during truncation, then re-enable them afterward.
+
+### JSON Verification
+
+- Use `.json` files for expected request and response bodies instead of inline JSON strings.
+- Place JSON files in `src/test/resources/` mirroring the test package structure.
 
 ---
 
@@ -788,3 +878,4 @@ public final class TenantContext {
 - Every domain object includes a `tenantId` field.
 - Test with multiple tenants in integration tests to verify data isolation.
 - Tenant context is set in an interceptor and cleared after the request completes. Always clear to prevent thread-local leakage.
+
