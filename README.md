@@ -10,38 +10,42 @@ A repository of reusable configuration files, documentation layers, custom comma
 
 ```
 claude-code-starter-kit/
-├── layers/                    # CLAUDE.md documentation layers
-│   ├── base/CLAUDE.md         # Universal engineering standards
+├── layers/                         # CLAUDE.md documentation layers
+│   ├── base/
+│   │   └── universal.md            # Stack-agnostic engineering standards (→ ~/.claude/CLAUDE.md)
 │   ├── tech/
+│   │   ├── java/CLAUDE.md          # Java/JVM naming and structural conventions
 │   │   ├── spring-boot/CLAUDE.md   # Spring Boot conventions
 │   │   ├── react/CLAUDE.md         # React/TypeScript conventions
 │   │   ├── kafka/CLAUDE.md         # Kafka messaging conventions
-│   │   └── spark-java/CLAUDE.md   # Spark/Java conventions
-│   ├── domain/TEMPLATE.md    # Domain context template (fill per project)
-│   └── compose.sh            # Script to assemble layers into one CLAUDE.md
-├── commands/                  # Claude Code custom commands
-│   ├── generation/            # Code generation commands
+│   │   └── spark-java/CLAUDE.md    # Spark/Java conventions
+│   ├── domain/TEMPLATE.md          # Domain context template (fill per project)
+│   └── compose.sh                  # Script to assemble layers into one CLAUDE.md
+├── commands/                       # Claude Code custom commands
+│   ├── generation/                 # Code generation commands
 │   │   ├── new-entity.md
 │   │   ├── new-endpoint.md
 │   │   ├── new-migration.md
 │   │   ├── new-kafka-topic.md
 │   │   ├── new-react-page.md
 │   │   └── new-react-component.md
-│   ├── analysis/              # Code analysis commands
+│   ├── analysis/                   # Code analysis commands
 │   │   ├── review.md
 │   │   ├── security-check.md
 │   │   ├── test-gaps.md
 │   │   ├── dependency-check.md
 │   │   └── api-consistency.md
-│   └── refactoring/           # Refactoring commands
+│   └── refactoring/                # Refactoring commands
 │       ├── extract-service.md
 │       ├── add-validation.md
 │       ├── add-tests.md
 │       └── optimise-query.md
-├── mcp/                       # MCP server configuration
+├── skills/
+│   └── promote/SKILL.md            # /promote skill — backport conventions to this kit
+├── mcp/                            # MCP server configuration
 │   ├── mcp-config-template.json
 │   └── setup-guide.md
-├── prompts/                   # Prompt templates for complex scenarios
+├── prompts/                        # Prompt templates for complex scenarios
 │   ├── system-design.md
 │   ├── debugging.md
 │   ├── performance.md
@@ -50,8 +54,8 @@ claude-code-starter-kit/
 │   ├── mvp-scoping.md
 │   └── domain-discovery.md
 ├── quickstart/
-│   └── spring-react-saas.md   # Step-by-step guide for the common stack
-└── README.md                  # This file
+│   └── spring-react-saas.md        # Step-by-step guide for the common stack
+└── README.md                       # This file
 ```
 
 ---
@@ -60,56 +64,52 @@ claude-code-starter-kit/
 
 The CLAUDE.md layer system lets you compose a project-specific `CLAUDE.md` from pre-written modules. Every project gets a tailored set of instructions without writing from scratch.
 
-### Layers Available
+### How Layers Are Split
 
-| Layer | File | Purpose |
-|-------|------|---------|
-| Base | `layers/base/CLAUDE.md` | Universal principles: naming, testing, error handling, Git, security. Include in every project. |
-| Spring Boot | `layers/tech/spring-boot/CLAUDE.md` | Entity patterns, repository conventions, service/controller design, DTOs, Flyway, testing, multi-tenancy. |
-| React | `layers/tech/react/CLAUDE.md` | Project structure, components, state management, API integration, routing, forms, Tailwind, testing. |
-| Kafka | `layers/tech/kafka/CLAUDE.md` | Producers, consumers, topic naming, error handling, dead letter topics, schema management, testing. |
-| Spark/Java | `layers/tech/spark-java/CLAUDE.md` | Spring Boot integration, job structure, Java conventions, DataFrame patterns, schema definitions, testing. |
-| Domain | `layers/domain/TEMPLATE.md` | Template for project-specific business context. Copy and fill in for each project. |
+Layers are organised across three tiers:
+
+| Tier | Layer | File | Destination |
+|------|-------|------|-------------|
+| Universal | `universal` | `layers/base/universal.md` | `~/.claude/CLAUDE.md` (user memory) |
+| Language | `java` | `layers/tech/java/CLAUDE.md` | Project `CLAUDE.md` |
+| Stack | `spring-boot`, `react`, `kafka`, `spark-java` | `layers/tech/*/CLAUDE.md` | Project `CLAUDE.md` |
+| Database | `mysql`, `postgres`, `mongodb`, `dynamodb` | `layers/tech/*/CLAUDE.md` | Project `CLAUDE.md` |
+| Domain | `domain` | `layers/domain/CLAUDE.md` | Project `CLAUDE.md` |
+
+The `universal` layer is written to `~/.claude/CLAUDE.md` by default so that stack-agnostic standards apply to **every project automatically**, without cluttering each project's `CLAUDE.md`. All other layers are written to the project file.
 
 ### Composing a CLAUDE.md
 
-**Option 1: Use the compose script**
-
 ```bash
 cd layers/
-./compose.sh /path/to/your/project/CLAUDE.md base spring-boot react
+./compose.sh /path/to/your/project/CLAUDE.md universal java spring-boot react
 ```
 
-This concatenates the selected layers with section headers into a single file.
+This writes `universal` to `~/.claude/CLAUDE.md` and assembles the remaining layers into the project file.
 
-**Option 2: Manual assembly**
+**Options:**
 
-Copy the contents of each layer you need into your project's `CLAUDE.md`, adding a header between each:
-
-```markdown
-<!-- === BASE LAYER === -->
-[contents of layers/base/CLAUDE.md]
-
-<!-- === SPRING BOOT LAYER === -->
-[contents of layers/tech/spring-boot/CLAUDE.md]
-
-<!-- === DOMAIN CONTEXT === -->
-[contents of your filled-in domain template]
-```
+| Flag | Effect |
+|------|--------|
+| `--no-user-memory` | Write all layers into the project file instead of routing universal to user memory |
+| `--user-memory <path>` | Override the user memory destination (default: `~/.claude/CLAUDE.md`) |
+| `--force` | Overwrite an existing user memory file that was not generated by compose.sh |
 
 ### Common Combinations
 
 | Project Type | Layers |
 |-------------|--------|
-| Spring Boot API | base + spring-boot + domain |
-| Spring Boot + React SaaS | base + spring-boot + react + domain |
-| Spring Boot + Kafka | base + spring-boot + kafka + domain |
-| Full stack with events | base + spring-boot + react + kafka + domain |
-| Spark data pipeline | base + spark-java + domain |
+| Spring Boot API (MySQL) | `universal java spring-boot mysql domain` |
+| Spring Boot API (Postgres) | `universal java spring-boot postgres domain` |
+| Spring Boot + React SaaS | `universal java spring-boot mysql react domain` |
+| Spring Boot + Kafka | `universal java spring-boot postgres kafka domain` |
+| Full stack with events | `universal java spring-boot mysql react kafka domain` |
+| Spring Boot + MongoDB | `universal java spring-boot mongodb domain` |
+| Spark data pipeline | `universal java spark-java domain` |
 
-### Customising Layers
+### Customising After Composition
 
-After composing, review the CLAUDE.md and add project-specific overrides at the bottom. If a project needs different conventions for specific areas, add a "Project Overrides" section that takes precedence.
+Every generated project `CLAUDE.md` includes a `PROJECT ADDITIONS` footer. Add project-specific overrides there. To promote a useful convention back to the kit, use the `/promote` skill (see below).
 
 ---
 
@@ -177,6 +177,23 @@ Follow the new-entity command to create a Product entity with fields:
 
 ---
 
+## How to Use the /promote Skill
+
+The `/promote` skill lets you backport a convention discovered during a project back into this kit. Install it once at user level and it is available in every project.
+
+### Setup
+
+```bash
+mkdir -p ~/.claude/skills/promote
+cp skills/promote/SKILL.md ~/.claude/skills/promote/
+```
+
+### Usage
+
+From any project, run `/promote` and describe the convention. Claude Code will locate the correct source layer in claude-docs, update it, commit the change, and open a PR for review.
+
+---
+
 ## How to Set Up MCP Servers
 
 MCP servers give Claude Code access to external tools: databases, Docker, web search, and more.
@@ -214,14 +231,14 @@ For a step-by-step walkthrough of starting a new Spring Boot + React SaaS projec
 
 ## Contributing Back to the Kit
 
-When you discover a useful pattern during a project, extract it back into the kit:
+When you discover a useful pattern during a project, promote it back into the kit.
 
-**New convention discovered?** Add it to the appropriate layer file under `layers/`.
+**From inside a project:** Run `/promote` — the skill handles locating the right layer, editing it, committing, and opening a PR.
 
-**Wrote a good custom command?** Add it to `commands/` in the appropriate category.
-
-**Found a useful prompt pattern?** Add it to `prompts/`.
-
-**New MCP server useful?** Add it to the template and setup guide.
+**Manually:**
+- New convention → add it to the appropriate layer file under `layers/`
+- New custom command → add it to `commands/` in the appropriate category
+- New prompt pattern → add it to `prompts/`
+- New MCP server → add it to the template and setup guide
 
 Keep the kit evolving. Every project should leave this repository a little better than it found it.
