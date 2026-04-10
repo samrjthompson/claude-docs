@@ -1,6 +1,6 @@
 # Claude Code Starter Kit
 
-A repository of reusable configuration files, documentation layers, custom commands, MCP configurations, and prompt templates for Claude Code. Pull from this kit every time you start a new software project to eliminate the cold-start problem.
+A repository of reusable skills, documentation layers, and MCP configurations for Claude Code. Pull from this kit every time you start a new software project to eliminate the cold-start problem.
 
 **This is NOT an application template or code scaffolding tool.** It contains no application code. It is purely an AI development environment configuration kit — everything Claude Code needs to understand how you work, what your standards are, and how to produce code that matches your expectations.
 
@@ -10,216 +10,205 @@ A repository of reusable configuration files, documentation layers, custom comma
 
 ```
 claude-code-starter-kit/
-├── layers/                         # CLAUDE.md documentation layers
-│   ├── base/
-│   │   └── universal.md            # Stack-agnostic engineering standards (→ ~/.claude/CLAUDE.md)
-│   ├── tech/
-│   │   ├── java/CLAUDE.md          # Java/JVM naming and structural conventions
-│   │   ├── spring-boot/CLAUDE.md   # Spring Boot conventions
-│   │   ├── react/CLAUDE.md         # React/TypeScript conventions
-│   │   ├── kafka/CLAUDE.md         # Kafka messaging conventions
-│   │   └── spark-java/CLAUDE.md    # Spark/Java conventions
-│   ├── domain/TEMPLATE.md          # Domain context template (fill per project)
-│   └── compose.sh                  # Script to assemble layers into one CLAUDE.md
-├── commands/                       # Claude Code custom commands
-│   ├── generation/                 # Code generation commands
-│   │   ├── new-entity.md
-│   │   ├── new-endpoint.md
-│   │   ├── new-migration.md
-│   │   ├── new-kafka-topic.md
-│   │   ├── new-react-page.md
-│   │   └── new-react-component.md
-│   ├── analysis/                   # Code analysis commands
-│   │   ├── review.md
-│   │   ├── security-check.md
-│   │   ├── test-gaps.md
-│   │   ├── dependency-check.md
-│   │   └── api-consistency.md
-│   └── refactoring/                # Refactoring commands
-│       ├── extract-service.md
-│       ├── add-validation.md
-│       ├── add-tests.md
-│       └── optimise-query.md
-├── skills/
-│   └── promote/SKILL.md            # /promote skill — backport conventions to this kit
-├── mcp/                            # MCP server configuration
+├── skills/                             # Claude Code skills (SKILL.md format)
+│   ├── conventions/                    # Auto-triggered background knowledge (project-level)
+│   │   ├── java/SKILL.md               # Java/JVM naming and structural conventions
+│   │   ├── spring-boot/                # Spring Boot conventions (split across files)
+│   │   │   ├── SKILL.md
+│   │   │   ├── controller-patterns.md
+│   │   │   ├── testing-patterns.md
+│   │   │   └── security-config.md
+│   │   ├── react/                      # React/TypeScript conventions
+│   │   │   ├── SKILL.md
+│   │   │   ├── component-patterns.md
+│   │   │   └── testing-and-auth.md
+│   │   ├── kafka/                      # Kafka conventions
+│   │   │   ├── SKILL.md
+│   │   │   └── producer-consumer.md
+│   │   └── spark-java/                 # Spark/Java conventions
+│   │       ├── SKILL.md
+│   │       └── pipeline-patterns.md
+│   ├── generation/                     # Code scaffolding skills (project-level)
+│   │   ├── new-entity/SKILL.md         # Complete JPA entity package
+│   │   ├── new-endpoint/SKILL.md       # Add endpoint to existing feature
+│   │   ├── new-migration/SKILL.md      # Flyway SQL migration
+│   │   ├── new-kafka-topic/SKILL.md    # Kafka topic + producer/consumer/tests
+│   │   ├── new-react-page/SKILL.md     # Page with routing and API integration
+│   │   └── new-react-component/SKILL.md  # Reusable React component
+│   ├── analysis/                       # Code review skills (user-level)
+│   │   ├── review/SKILL.md             # Full code review against standards
+│   │   ├── security-check/SKILL.md     # Security vulnerability scan
+│   │   ├── test-gaps/SKILL.md          # Missing test coverage analysis
+│   │   ├── dependency-check/SKILL.md   # Dependency health check
+│   │   └── api-consistency/SKILL.md    # REST API consistency audit
+│   ├── refactoring/                    # Code improvement skills (project-level)
+│   │   ├── extract-service/SKILL.md    # Move logic from controller to service
+│   │   ├── add-validation/SKILL.md     # Add comprehensive input validation
+│   │   ├── add-tests/SKILL.md          # Generate missing tests
+│   │   └── optimise-query/SKILL.md     # Database query analysis and optimisation
+│   ├── workflows/                      # Complex multi-step skills (user-level)
+│   │   ├── system-design/SKILL.md      # Design before coding
+│   │   ├── debugging/SKILL.md          # Systematic bug investigation
+│   │   ├── performance/SKILL.md        # Performance diagnosis and optimisation
+│   │   ├── migration-planning/SKILL.md # Migration strategy and execution plan
+│   │   ├── code-archaeology/SKILL.md   # Explore an unfamiliar codebase
+│   │   ├── mvp-scoping/SKILL.md        # Scope a minimum viable product
+│   │   └── domain-discovery/SKILL.md   # Extract domain knowledge
+│   └── promote/SKILL.md                # /promote — backport conventions to this kit
+├── layers/
+│   └── base/
+│       └── universal.md                # Stack-agnostic standards (→ ~/.claude/CLAUDE.md)
+├── templates/
+│   └── domain.md                       # Domain context template (fill per project)
+├── mcp/                                # MCP server configuration
 │   ├── mcp-config-template.json
 │   └── setup-guide.md
-├── prompts/                        # Prompt templates for complex scenarios
-│   ├── system-design.md
-│   ├── debugging.md
-│   ├── performance.md
-│   ├── migration-planning.md
-│   ├── code-archaeology.md
-│   ├── mvp-scoping.md
-│   └── domain-discovery.md
 ├── quickstart/
-│   └── spring-react-saas.md        # Step-by-step guide for the common stack
-└── README.md                       # This file
+│   └── spring-react-saas.md            # Step-by-step guide for the common stack
+├── install.sh                          # Install skills to user or project
+└── README.md                           # This file
 ```
 
 ---
 
-## How to Use the Layer System
+## Installation
 
-The CLAUDE.md layer system lets you compose a project-specific `CLAUDE.md` from pre-written modules. Every project gets a tailored set of instructions without writing from scratch.
+### One-Time Setup
 
-### How Layers Are Split
-
-Layers are organised across three tiers:
-
-| Tier | Layer | File | Destination |
-|------|-------|------|-------------|
-| Universal | `universal` | `layers/base/universal.md` | `~/.claude/CLAUDE.md` (user memory) |
-| Language | `java` | `layers/tech/java/CLAUDE.md` | Project `CLAUDE.md` |
-| Stack | `spring-boot`, `react`, `kafka`, `spark-java` | `layers/tech/*/CLAUDE.md` | Project `CLAUDE.md` |
-| Database | `mysql`, `postgres`, `mongodb`, `dynamodb` | `layers/tech/*/CLAUDE.md` | Project `CLAUDE.md` |
-| Domain | `domain` | `layers/domain/CLAUDE.md` | Project `CLAUDE.md` |
-
-The `universal` layer is written to `~/.claude/CLAUDE.md` by default so that stack-agnostic standards apply to **every project automatically**, without cluttering each project's `CLAUDE.md`. All other layers are written to the project file.
-
-### Composing a CLAUDE.md
+Install user-level skills and the universal `CLAUDE.md` to your home directory:
 
 ```bash
-cd layers/
-./compose.sh /path/to/your/project/CLAUDE.md universal java spring-boot react
+./install.sh setup
 ```
 
-This writes `universal` to `~/.claude/CLAUDE.md` and assembles the remaining layers into the project file.
+This:
+- Writes `layers/base/universal.md` to `~/.claude/CLAUDE.md` — stack-agnostic engineering standards that apply to every project automatically
+- Copies `skills/analysis/`, `skills/workflows/`, and `skills/promote/` to `~/.claude/skills/`
 
-**Options:**
+### Per-Project Setup
 
-| Flag | Effect |
-|------|--------|
-| `--no-user-memory` | Write all layers into the project file instead of routing universal to user memory |
-| `--user-memory <path>` | Override the user memory destination (default: `~/.claude/CLAUDE.md`) |
-| `--force` | Overwrite an existing user memory file that was not generated by compose.sh |
+Install stack-specific skills into a project:
+
+```bash
+./install.sh /path/to/your/project java spring-boot react
+```
+
+This copies the matching convention, generation, and refactoring skills to `/path/to/your/project/.claude/skills/`.
+
+**Supported stacks:**
+
+| Argument | Skills installed |
+|---|---|
+| `java` | `conventions/java` |
+| `spring-boot` | `conventions/java`, `conventions/spring-boot`, all generation and refactoring skills |
+| `react` | `conventions/react`, `new-react-page`, `new-react-component` |
+| `kafka` | `conventions/kafka`, `new-kafka-topic` |
+| `spark-java` | `conventions/java`, `conventions/spark-java` |
 
 ### Common Combinations
 
-| Project Type | Layers |
-|-------------|--------|
-| Spring Boot API (MySQL) | `universal java spring-boot mysql domain` |
-| Spring Boot API (Postgres) | `universal java spring-boot postgres domain` |
-| Spring Boot + React SaaS | `universal java spring-boot mysql react domain` |
-| Spring Boot + Kafka | `universal java spring-boot postgres kafka domain` |
-| Full stack with events | `universal java spring-boot mysql react kafka domain` |
-| Spring Boot + MongoDB | `universal java spring-boot mongodb domain` |
-| Spark data pipeline | `universal java spark-java domain` |
-
-### Customising After Composition
-
-Every generated project `CLAUDE.md` includes a `PROJECT ADDITIONS` footer. Add project-specific overrides there. To promote a useful convention back to the kit, use the `/promote` skill (see below).
+| Project Type | Command |
+|---|---|
+| Spring Boot API | `./install.sh /path/to/project java spring-boot` |
+| Spring Boot + React SaaS | `./install.sh /path/to/project java spring-boot react` |
+| Spring Boot + Kafka | `./install.sh /path/to/project java spring-boot kafka` |
+| Full stack with events | `./install.sh /path/to/project java spring-boot react kafka` |
+| Spark data pipeline | `./install.sh /path/to/project java spark-java` |
 
 ---
 
-## How to Use Custom Commands
+## Skills
 
-Custom commands are prompt files that Claude Code follows to generate, analyse, or refactor code.
+Skills are Claude Code's native format for reusable prompts. Each skill lives in a directory containing a `SKILL.md` file with YAML frontmatter.
 
-### Setup
+### Convention Skills (auto-triggered, no invocation needed)
 
-Copy the commands you need to your project's `.claude/commands/` directory:
-
-```bash
-mkdir -p /path/to/your/project/.claude/commands
-cp commands/generation/new-entity.md /path/to/your/project/.claude/commands/
-cp commands/analysis/review.md /path/to/your/project/.claude/commands/
-# ... copy whichever commands you use
-```
-
-Or copy all commands at once:
-
-```bash
-cp -r commands/* /path/to/your/project/.claude/commands/
-```
-
-### Using Commands
-
-In Claude Code, invoke a command by referencing it:
+Convention skills have `user-invocable: false` — they load automatically when you open matching files. They provide background knowledge Claude Code uses to produce consistent code.
 
 ```
-/new-entity Product
+skills/conventions/java/          → loads when editing *.java files
+skills/conventions/spring-boot/   → loads when editing *.java files
+skills/conventions/react/         → loads when editing *.tsx, *.ts files
+skills/conventions/kafka/         → loads when editing *kafka*, *event* files
+skills/conventions/spark-java/    → loads when editing *.java, *spark* files
 ```
 
-Or ask Claude Code to follow the command:
+Large convention skills are split across multiple files in the same directory. The `SKILL.md` holds the core rules; companion `.md` files contain detailed code examples linked from the main file.
+
+### Generation Skills (user-invocable, project-level)
 
 ```
-Follow the new-entity command to create a Product entity with fields:
-- name (String, required, max 255)
-- price (BigDecimal, required)
-- sku (String, required, unique per tenant)
-- status (ProductStatus: ACTIVE, DISCONTINUED)
+/new-entity Product name:String price:BigDecimal status:ProductStatus
+/new-endpoint GET /products/{id}/reviews
+/new-migration add_index_to_products_sku
+/new-kafka-topic order.placed OrderPlacedEvent
+/new-react-page ProductList
+/new-react-component DataTable
 ```
 
-### Available Commands
+### Analysis Skills (user-invocable, user-level)
 
-**Generation** — Create new code following project patterns:
-- `new-entity` — Complete feature package (entity, repository, service, controller, DTOs, tests, migration)
-- `new-endpoint` — Add endpoint to existing feature
-- `new-migration` — Flyway migration with rollback
-- `new-kafka-topic` — Full Kafka setup (producer, consumer, config, tests)
-- `new-react-page` — Page with routing, API integration, and state handling
-- `new-react-component` — Reusable component with typing and tests
+```
+/review
+/security-check
+/test-gaps
+/dependency-check
+/api-consistency
+```
 
-**Analysis** — Review code for quality and consistency:
-- `review` — Full code review against CLAUDE.md standards
-- `security-check` — Security vulnerability scan
-- `test-gaps` — Missing test coverage analysis
-- `dependency-check` — Dependency health and vulnerability check
-- `api-consistency` — REST API consistency audit
+### Refactoring Skills (user-invocable, project-level)
 
-**Refactoring** — Improve existing code:
-- `extract-service` — Move business logic from controller to service
-- `add-validation` — Add comprehensive input validation
-- `add-tests` — Generate missing tests for existing code
-- `optimise-query` — Database query analysis and optimisation
+```
+/extract-service OrderController
+/add-validation CreateOrderRequest
+/add-tests OrderService
+/optimise-query GET /orders - 3s response with 50k records
+```
+
+### Workflow Skills (user-invocable, user-level)
+
+```
+/system-design "payment processing with recurring billing"
+/debugging "NPE in OrderService.calculateTax() on checkout"
+/performance "GET /orders - 3s at p95 with 50k rows"
+/migration-planning "extract billing into a separate service"
+/code-archaeology "I'm inheriting this codebase, need to understand it"
+/mvp-scoping "a tool that helps developers track time spent per PR"
+/domain-discovery "here are my notes from a stakeholder interview..."
+```
 
 ---
 
-## How to Use the /promote Skill
+## Domain Context Template
 
-The `/promote` skill lets you backport a convention discovered during a project back into this kit. Install it once at user level and it is available in every project.
-
-### Setup
+Each project needs a domain context document that describes its business entities, workflows, rules, and terminology. Copy the template and fill it in:
 
 ```bash
-mkdir -p ~/.claude/skills/promote
-cp skills/promote/SKILL.md ~/.claude/skills/promote/
+cp templates/domain.md /path/to/your/project/DOMAIN.md
+# Edit DOMAIN.md with your project's specifics
+# Then add it to your project CLAUDE.md:
+echo "" >> /path/to/your/project/CLAUDE.md
+cat /path/to/your/project/DOMAIN.md >> /path/to/your/project/CLAUDE.md
 ```
-
-### Usage
-
-From any project, run `/promote` and describe the convention. Claude Code will locate the correct source layer in claude-docs, update it, commit the change, and open a PR for review.
 
 ---
 
-## How to Set Up MCP Servers
+## The /promote Skill
+
+The `/promote` skill lets you backport a convention discovered during a project back into this kit. It is installed at user level by `./install.sh setup` and is available in every project.
+
+From any project, run `/promote` and describe the convention. Claude Code will locate the correct skill file in claude-docs, update it, commit the change, and open a PR for review.
+
+---
+
+## MCP Servers
 
 MCP servers give Claude Code access to external tools: databases, Docker, web search, and more.
 
 1. Copy the template: `cp mcp/mcp-config-template.json /path/to/your/project/.claude/mcp.json`
 2. Edit the configuration with your project's connection details.
 3. Remove servers you do not need.
-4. Follow `mcp/setup-guide.md` for detailed setup and verification instructions.
-
----
-
-## How to Use Prompt Templates
-
-Prompt templates are for complex, multi-step scenarios that go beyond what a custom command covers.
-
-Copy the relevant prompt, fill in the bracketed sections with your specific context, and paste it into Claude Code.
-
-| Prompt | When to Use |
-|--------|------------|
-| `system-design` | Starting a new feature — think before coding |
-| `debugging` | Stuck on a bug — systematic investigation |
-| `performance` | Something is slow — diagnose and optimise |
-| `migration-planning` | Big refactor or data migration — plan carefully |
-| `code-archaeology` | Unfamiliar codebase — systematic exploration |
-| `mvp-scoping` | New product idea — scope the minimum viable build |
-| `domain-discovery` | New business domain — extract structured knowledge |
+4. Follow `mcp/setup-guide.md` for detailed setup and verification.
 
 ---
 
@@ -233,12 +222,12 @@ For a step-by-step walkthrough of starting a new Spring Boot + React SaaS projec
 
 When you discover a useful pattern during a project, promote it back into the kit.
 
-**From inside a project:** Run `/promote` — the skill handles locating the right layer, editing it, committing, and opening a PR.
+**From inside a project:** Run `/promote` — the skill handles locating the right convention file, editing it, committing, and opening a PR.
 
 **Manually:**
-- New convention → add it to the appropriate layer file under `layers/`
-- New custom command → add it to `commands/` in the appropriate category
-- New prompt pattern → add it to `prompts/`
-- New MCP server → add it to the template and setup guide
+- New convention → edit the appropriate `skills/conventions/*/SKILL.md` or companion file
+- New generation/refactoring pattern → edit the appropriate `skills/generation/` or `skills/refactoring/` skill
+- New workflow → add a skill to `skills/workflows/`
+- New MCP server → add it to `mcp/mcp-config-template.json` and `mcp/setup-guide.md`
 
 Keep the kit evolving. Every project should leave this repository a little better than it found it.

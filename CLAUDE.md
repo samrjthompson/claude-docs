@@ -4,67 +4,85 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repository Is
 
-This is a **Claude Code Starter Kit** — a collection of reusable configuration files, documentation layers, custom commands, MCP configurations, and prompt templates. It contains **no application code**. It is purely an AI development environment configuration kit that gets copied into real projects to eliminate the cold-start problem.
+This is a **Claude Code Starter Kit** — a collection of reusable skills, documentation layers, and MCP configurations. It contains **no application code**. It is purely an AI development environment configuration kit that gets installed into real projects to eliminate the cold-start problem.
 
 ## Architecture
 
 The kit has four main components:
 
-### Layers (`layers/`)
-
-Composable CLAUDE.md documentation modules assembled into a project-specific CLAUDE.md. Layers are split across three tiers:
-
-- **`universal`** (`layers/base/universal.md`) — Stack-agnostic engineering standards (coding philosophy, naming, package-by-feature, git, testing, error handling, logging, security). Written to `~/.claude/CLAUDE.md` (user memory), so it applies to every project automatically without appearing in each project's CLAUDE.md.
-- **Language layer** (`layers/tech/java/CLAUDE.md`) — JVM-specific naming, Java directory tree, Mockito/TestContainers, exception hierarchy, MDC logging, Javadoc, Spring Security/Keycloak conventions.
-- **Tech/stack layers** (`layers/tech/`) — `spring-boot`, `react`, `kafka`, `spark-java` add framework-specific conventions. Database layers (`mysql`, `postgres`, `mongodb`, `dynamodb`) provide persistence patterns. The `domain/TEMPLATE.md` is copied and filled in per-project with business context (entities, workflows, terminology, roles).
-
-Use `layers/compose.sh` to assemble layers:
-```bash
-cd layers/
-./compose.sh /path/to/project/CLAUDE.md universal java spring-boot react
-```
-
-The `universal` layer is written to `~/.claude/CLAUDE.md` by default. All other layers are written to the project output file. Use `--no-user-memory` to inline all layers into the project file instead.
-
-### Custom Commands (`commands/`)
-
-Prompt files for Claude Code's `/command` feature, organised into three categories:
-- **generation/** — Scaffold complete feature packages (entities, endpoints, migrations, Kafka topics, React pages/components)
-- **analysis/** — Review code against standards (review, security, test gaps, dependencies, API consistency)
-- **refactoring/** — Improve existing code (extract service, add validation, add tests, optimise queries)
-
-Most commands are copied to a project's `.claude/commands/` directory to be used.
-
 ### Skills (`skills/`)
 
-User-level skills in the modern Claude Code skills format (a directory containing `SKILL.md` with YAML frontmatter). Skills support tool restrictions, invocation control, and argument hints.
+The primary delivery mechanism. Skills are directories containing a `SKILL.md` file with YAML frontmatter. They are installed into projects or user-level `~/.claude/skills/` via `install.sh`.
 
-**`skills/promote/`** — operates on the claude-docs kit itself rather than on a project. Copy it to `~/.claude/skills/promote/` (user-level) so it is available in every project. Once installed, `/promote` can be run from any project to backport a convention discovered during development back to the appropriate source layer in claude-docs, committing the change and opening a PR for review.
+Skills are organised into five categories:
+
+- **`conventions/`** — Stack-specific background knowledge (auto-triggered, `user-invocable: false`). Installed at project level so they only load in relevant projects. Each convention skill uses the `paths` field to trigger on matching file types. Large conventions are split across SKILL.md (rules) and companion `.md` files (code examples).
+  - `java/` — JVM naming, Java directory tree, Mockito/TestContainers, exception hierarchy, MDC logging
+  - `spring-boot/` — Package-by-feature structure, service/controller/DTO patterns, testing, security, multi-tenancy
+  - `react/` — Component structure, React Query, TypeScript conventions, testing, auth
+  - `kafka/` — Topic naming, event envelope, producer/consumer, error handling, testing
+  - `spark-java/` — Project structure, SparkSession, transformation classes, testing
+
+- **`generation/`** — Code scaffolding commands (user-invocable, project-level). Produce complete, runnable code — no placeholders or TODOs.
+  - `new-entity/` — Complete JPA entity package (entity, repository, service, controller, DTOs, mapper, tests, migration)
+  - `new-endpoint/` — Add endpoint to an existing feature
+  - `new-migration/` — Flyway SQL migration with rollback comment
+  - `new-kafka-topic/` — Full Kafka setup (event DTO, producer, consumer, topic config, DLT, tests)
+  - `new-react-page/` — Page component, API hooks, route registration, MSW tests
+  - `new-react-component/` — Reusable component with props interface, Tailwind, test
+
+- **`analysis/`** — Review and audit commands (user-invocable, user-level). General-purpose — useful in any project.
+  - `review/` — 8-category code review (Architecture, Naming, Errors, Validation, Testing, Security, Quality, API)
+  - `security-check/` — Injection, auth/authz, data exposure, config, deps, multi-tenancy
+  - `test-gaps/` — Test inventory, required coverage, missing scenarios, quality assessment
+  - `dependency-check/` — Outdated versions, CVEs, unnecessary deps, licence compliance
+  - `api-consistency/` — URL naming, HTTP methods, response structure, status codes, docs
+
+- **`refactoring/`** — Code improvement commands (user-invocable, project-level).
+  - `extract-service/` — Move business logic from controller to service
+  - `add-validation/` — 4-layer validation (DTO Bean Validation, controller @Valid, service business rules, entity invariants)
+  - `add-tests/` — Generate missing tests for controllers, services, repositories, React
+  - `optimise-query/` — N+1, missing indexes, inefficient joins, unbounded results, caching
+
+- **`workflows/`** — Complex multi-step reasoning prompts (user-invocable, user-level).
+  - `system-design/` — 8-section design checklist before writing code
+  - `debugging/` — 7-step systematic debugging (does NOT jump to a fix)
+  - `performance/` — Measure first, then diagnose db/app/network/caching layers
+  - `migration-planning/` — 8-section migration plan with rollback at every step
+  - `code-archaeology/` — 6-phase codebase exploration and documentation
+  - `mvp-scoping/` — Feature classification (MUST/SHOULD/COULD/WON'T) + technical spec
+  - `domain-discovery/` — Entity extraction, relationships, workflows, rules, glossary
+
+- **`promote/`** — User-level skill for backporting conventions from a project back into this kit.
+
+### Universal Layer (`layers/base/universal.md`)
+
+Stack-agnostic engineering standards (coding philosophy, naming, package-by-feature, git, testing, error handling, logging, security). Installed to `~/.claude/CLAUDE.md` by `./install.sh setup` so it applies to every project automatically without appearing in each project's CLAUDE.md.
+
+### Domain Template (`templates/domain.md`)
+
+A fill-in template for project-specific business context (entities, workflows, terminology, roles). Users copy this to their project, fill it in, and append it to their project's CLAUDE.md.
 
 ### MCP Configuration (`mcp/`)
 
 Template (`mcp-config-template.json`) and setup guide for Model Context Protocol servers (filesystem, git, PostgreSQL, MySQL, Docker, Brave Search, memory). Copied to a project's `.claude/mcp.json` and edited with project-specific connection details.
 
-### Prompt Templates (`prompts/`)
-
-Structured prompts for complex multi-step scenarios (system design, debugging, performance, migration planning, code archaeology, MVP scoping, domain discovery). Users copy the prompt, fill in bracketed placeholders, and paste into Claude Code.
-
 ## Key Conventions When Editing This Kit
 
-- **Layers must not contradict each other.** All tech layers complement the universal layer. If a tech layer needs different behaviour, it should explicitly state the override.
-- **Commands produce complete, runnable code.** No placeholders or TODOs. All generation commands output every file needed for a feature (entity, DTOs, service, controller, tests, migration).
-- **Package-by-feature is non-negotiable** across all layers. Code is organised by business feature, not by technical layer.
-- **Conventional Commits** format: `type(scope): description` — used in all layers' git conventions.
-- The compose script (`layers/compose.sh`) concatenates layers with HTML comment separators. The generated output should not be edited directly; edit source layers and recompose.
+- **Convention skills must not contradict each other.** All tech skills complement the universal layer. If a skill needs different behaviour, it should explicitly state the override.
+- **Generation skills produce complete, runnable code.** No placeholders or TODOs. All generation skills output every file needed for a feature.
+- **Package-by-feature is non-negotiable** across all skills. Code is organised by business feature, not by technical layer.
+- **Conventional Commits** format: `type(scope): description` — used in all skills' git conventions.
+- **SKILL.md files stay under 500 lines.** Larger skills split into SKILL.md + companion `.md` files in the same directory.
 
-## Common Layer Combinations
+## Installation
 
-| Project Type | Layers |
-|---|---|
-| Spring Boot API (MySQL) | universal java spring-boot mysql domain |
-| Spring Boot API (Postgres) | universal java spring-boot postgres domain |
-| Spring Boot + React SaaS | universal java spring-boot mysql react domain |
-| Spring Boot + Kafka | universal java spring-boot postgres kafka domain |
-| Full stack with events | universal java spring-boot mysql react kafka domain |
-| Spring Boot + MongoDB | universal java spring-boot mongodb domain |
-| Spark data pipeline | universal java spark-java domain |
+```bash
+# One-time user setup
+./install.sh setup
+
+# Per-project
+./install.sh /path/to/project java spring-boot react
+```
+
+See `README.md` for full installation options and skill descriptions.

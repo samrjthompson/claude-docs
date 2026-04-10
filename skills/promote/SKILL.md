@@ -65,17 +65,21 @@ Wait for the user to provide a clean, generalised version before continuing.
 
 Based on the content, identify which layer file it belongs in:
 
-| Content type | Target layer file |
+| Content type | Target skill file |
 |---|---|
 | Universal principles: coding philosophy, testing, error handling, git, naming rules, logging, security | `layers/base/universal.md` |
-| Java naming, JVM idioms, Mockito, Lombok, exception hierarchy, MDC, Javadoc | `layers/tech/java/CLAUDE.md` |
-| Spring Boot patterns: controllers, services, repositories, DTOs, config | `layers/tech/spring-boot/CLAUDE.md` |
-| React/TypeScript: components, hooks, state, routing | `layers/tech/react/CLAUDE.md` |
-| Kafka: producers, consumers, serialisation, retry, DLQ patterns | `layers/tech/kafka/CLAUDE.md` |
-| MySQL/Flyway: schema conventions, migration patterns, query patterns | `layers/tech/mysql/CLAUDE.md` |
-| PostgreSQL/Flyway patterns | `layers/tech/postgres/CLAUDE.md` |
-| MongoDB/Spring Data patterns | `layers/tech/mongodb/CLAUDE.md` |
-| Spark/Java data pipeline patterns | `layers/tech/spark-java/CLAUDE.md` |
+| Java naming, JVM idioms, Mockito, Lombok, exception hierarchy, MDC, Javadoc | `skills/conventions/java/SKILL.md` |
+| Spring Boot patterns: controllers, services, repositories, DTOs, config | `skills/conventions/spring-boot/SKILL.md` |
+| Spring Boot controller/DTO/mapper examples | `skills/conventions/spring-boot/controller-patterns.md` |
+| Spring Boot testing patterns (MockMvc, Mockito, fixtures) | `skills/conventions/spring-boot/testing-patterns.md` |
+| Spring Boot security (OAuth2/JWT, TenantInterceptor) | `skills/conventions/spring-boot/security-config.md` |
+| React/TypeScript: components, hooks, state, routing | `skills/conventions/react/SKILL.md` |
+| React component/API/form patterns | `skills/conventions/react/component-patterns.md` |
+| React testing and auth patterns | `skills/conventions/react/testing-and-auth.md` |
+| Kafka: producers, consumers, serialisation, retry, DLQ patterns | `skills/conventions/kafka/SKILL.md` |
+| Kafka producer/consumer implementation examples | `skills/conventions/kafka/producer-consumer.md` |
+| Spark/Java data pipeline patterns | `skills/conventions/spark-java/SKILL.md` |
+| Spark DataFrame API, schema, quality checks | `skills/conventions/spark-java/pipeline-patterns.md` |
 
 Present your recommendation to the user:
 "I think this belongs in `[layer file]` because [one-sentence reason]. Does that sound
@@ -94,7 +98,7 @@ Determine the path to the claude-docs repository using this priority order:
         Source: /home/sam/dev/claude-docs/layers/tech/spring-boot/CLAUDE.md -->
    ```
    Extract the directory by stripping `/layers/tech/...` from the end of the first
-   match. Verify the resulting directory exists and contains `layers/compose.sh`.
+   match. Verify the resulting directory exists and contains `skills/` or `layers/`.
 
 2. **If no `Source:` lines are found** (hand-written CLAUDE.md), ask the user:
    "I couldn't determine the claude-docs path from this project's CLAUDE.md.
@@ -161,18 +165,18 @@ hyphens, max 40 characters):
 Run the following in sequence, stopping and reporting any error:
 
 ```
-git -C "$CLAUDE_DOCS_ROOT" checkout -b promote/{layer}-{slug}
-git -C "$CLAUDE_DOCS_ROOT" add layers/{target-layer-path}
-git -C "$CLAUDE_DOCS_ROOT" commit -m "feat({layer}): {one-line description}"
-git -C "$CLAUDE_DOCS_ROOT" push -u origin promote/{layer}-{slug}
+git -C "$CLAUDE_DOCS_ROOT" checkout -b promote/{skill}-{slug}
+git -C "$CLAUDE_DOCS_ROOT" add {target-skill-path}
+git -C "$CLAUDE_DOCS_ROOT" commit -m "feat({skill}): {one-line description}"
+git -C "$CLAUDE_DOCS_ROOT" push -u origin promote/{skill}-{slug}
 gh pr create \
   --repo {remote-repo} \
-  --title "feat({layer}): {one-line description}" \
+  --title "feat({skill}): {one-line description}" \
   --body "$(cat <<EOF
 ## Convention promoted from project
 
 **Source project:** {project name or path}
-**Target layer:** {layer file}
+**Target skill:** {skill file}
 
 ### Change
 
@@ -197,26 +201,25 @@ Output a clean summary:
 ```
 Convention promoted successfully.
 
-Layer updated:  {full path to layer file}
-Branch:         promote/{layer}-{slug}
+Skill updated:  {full path to skill file}
+Branch:         promote/{skill}-{slug}
 PR:             {PR URL}
 
-To use the updated layer in this project:
-  cd {claude-docs-root}/layers
-  ./compose.sh {project CLAUDE.md path} {layers...}
+To use the updated skill in this project:
+  cp -r {claude-docs-root}/skills/{skill-dir} .claude/skills/
 ```
 
 If the git/PR workflow was skipped due to missing tools, output the manual steps
 instead:
 
 ```
-Layer updated:  {full path to layer file}
+Skill updated:  {full path to skill file}
 
 Manual steps to open a PR:
   cd {claude-docs-root}
-  git checkout -b promote/{layer}-{slug}
-  git add layers/{target-layer-path}
-  git commit -m "feat({layer}): {description}"
-  git push -u origin promote/{layer}-{slug}
-  gh pr create --title "feat({layer}): {description}"
+  git checkout -b promote/{skill}-{slug}
+  git add {target-skill-path}
+  git commit -m "feat({skill}): {description}"
+  git push -u origin promote/{skill}-{slug}
+  gh pr create --title "feat({skill}): {description}"
 ```
