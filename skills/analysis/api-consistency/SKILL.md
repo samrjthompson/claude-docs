@@ -1,6 +1,6 @@
 ---
 name: api-consistency
-description: Audit all REST endpoints for consistency — URL naming, HTTP methods, response structure, status codes, validation, OpenAPI documentation, and tenant handling
+description: Audit all REST endpoints for consistency — URL naming, HTTP methods, response structure, status codes, validation, and tenant handling
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob
 ---
@@ -48,8 +48,8 @@ Scan all `@RestController` classes and build a complete inventory:
 ### 5. HTTP Status Code Consistency
 
 - `200` for reads and updates.
-- `201` for creates (with `@ResponseStatus(HttpStatus.CREATED)`).
-- `204` for deletes (with `@ResponseStatus(HttpStatus.NO_CONTENT)`).
+- `201` for creates.
+- `204` for deletes.
 - `400` for validation errors.
 - `404` for not found.
 - `422` for business rule violations.
@@ -81,10 +81,10 @@ Scan all `@RestController` classes and build a complete inventory:
 **Overall Consistency:** [CONSISTENT | MOSTLY CONSISTENT | INCONSISTENT]
 
 ### Endpoint Inventory
-| Method | Path | Controller | Status Codes | Documented |
-|--------|------|-----------|-------------|-----------|
-| GET | /api/v1/invoices | BillingController | 200 | Yes |
-| POST | /api/v1/invoices | BillingController | 201 | Yes |
+| Method | Path | Controller | Status Codes |
+|--------|------|-----------|-------------|
+| GET | /api/v1/invoices | BillingController | 200 |
+| POST | /api/v1/invoices | BillingController | 201 |
 
 ### Inconsistencies Found
 
@@ -96,9 +96,6 @@ Scan all `@RestController` classes and build a complete inventory:
 
 #### Status Codes
 - [Inconsistency and affected endpoints]
-
-#### Missing Documentation
-- [Endpoints missing @Operation or other annotations]
 
 ### Recommendations
 1. [Most impactful consistency fix]

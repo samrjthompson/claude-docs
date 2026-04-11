@@ -78,8 +78,6 @@ Based on the content, identify which layer file it belongs in:
 | React testing and auth patterns | `skills/conventions/react/testing-and-auth.md` |
 | Kafka: producers, consumers, serialisation, retry, DLQ patterns | `skills/conventions/kafka/SKILL.md` |
 | Kafka producer/consumer implementation examples | `skills/conventions/kafka/producer-consumer.md` |
-| Spark/Java data pipeline patterns | `skills/conventions/spark-java/SKILL.md` |
-| Spark DataFrame API, schema, quality checks | `skills/conventions/spark-java/pipeline-patterns.md` |
 
 Present your recommendation to the user:
 "I think this belongs in `[layer file]` because [one-sentence reason]. Does that sound

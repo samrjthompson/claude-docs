@@ -101,7 +101,6 @@ com.example.app/
 └── config/
     ├── SecurityConfig.java
     ├── WebConfig.java
-    └── OpenApiConfig.java
 ```
 
 ### Feature Package Rules
@@ -117,7 +116,7 @@ com.example.app/
 
 `common` holds genuinely cross-cutting concerns used across 3+ features: `ControllerExceptionHandler`, `ErrorResponse`, `ErrorDetail`, `PageResponse`, `TenantContext`, `TenantInterceptor`.
 
-`config` holds Spring configuration classes: security, web MVC, OpenAPI.
+`config` holds Spring configuration classes: security, web MVC.
 
 Do not put business logic in `common` or `config`.
 

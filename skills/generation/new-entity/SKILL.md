@@ -57,7 +57,6 @@ Generate ALL of the following files. Do not skip any file.
 ### 4. Controller Class (`{EntityName}Controller.java`)
 
 - `@RestController` with no class-level `@RequestMapping`.
-- OpenAPI annotations: `@Tag`, `@Operation` on every endpoint.
 - Standard CRUD endpoints with full paths on each method:
   - `POST /api/v1/{entity-plural-kebab}` → create (201)
   - `GET /api/v1/{entity-plural-kebab}/{id}` → get by ID (200)

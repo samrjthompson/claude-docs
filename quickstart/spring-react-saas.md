@@ -146,7 +146,7 @@ This generates the full vertical slice: entity, repository, service, controller,
 3. Run the backend tests
 4. Run the React frontend and verify it starts without errors
 5. Run the frontend tests
-6. Verify the Customer CRUD endpoints work via curl or the Swagger UI"
+6. Verify the Customer CRUD endpoints work via curl"
 ```
 
 ---

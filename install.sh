@@ -20,12 +20,10 @@ Supported stacks:
   spring-boot   Spring Boot conventions (also installs java, generation, and refactoring skills)
   react         React/TypeScript conventions (also installs react generation skills)
   kafka         Kafka conventions
-  spark-java    Spark Java conventions (also installs java)
 
 Examples:
   $0 setup
   $0 ~/myproject java spring-boot react
-  $0 ~/myproject java spark-java
 EOF
   exit 1
 }
@@ -148,15 +146,6 @@ cmd_project() {
         install_skill "$SCRIPT_DIR/skills/conventions/kafka" "$project_skills_dir"
         echo "  Generation skills:"
         install_skill "$SCRIPT_DIR/skills/generation/new-kafka-topic" "$project_skills_dir"
-        ;;
-
-      spark-java)
-        echo "Stack: spark-java"
-        if [[ "$installed_java" == false ]]; then
-          install_skill "$SCRIPT_DIR/skills/conventions/java" "$project_skills_dir"
-          installed_java=true
-        fi
-        install_skill "$SCRIPT_DIR/skills/conventions/spark-java" "$project_skills_dir"
         ;;
 
       *)

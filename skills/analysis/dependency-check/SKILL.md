@@ -12,7 +12,7 @@ Review project dependencies for outdated versions, known vulnerabilities, unnece
 ## Analysis Scope
 
 Examine:
-- `pom.xml` (Maven dependencies for Spring Boot / Spark)
+- `pom.xml` (Maven dependencies for Spring Boot)
 - `package.json` (npm dependencies for React)
 
 ## Check Categories

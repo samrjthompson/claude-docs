@@ -157,13 +157,6 @@ Use these servers:
 - **Docker**: For managing local infrastructure (MySQL, Kafka, Keycloak containers).
 - **Brave Search**: For documentation lookups.
 
-### Data Processing Project (Spark/Java)
-
-Use these servers:
-- **Filesystem**: For project file access.
-- **Git**: For version control.
-- **Brave Search**: For Spark API documentation lookups.
-
 ### Minimal Setup
 
 At minimum, configure:

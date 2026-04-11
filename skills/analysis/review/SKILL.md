@@ -76,7 +76,6 @@ For each category, report: **PASS** (no issues), **WARN** (minor issues or sugge
 - Do endpoints follow REST conventions?
 - Is pagination implemented for list endpoints?
 - Are response structures consistent?
-- Is OpenAPI documentation present on all endpoints?
 
 ## Output Format
 

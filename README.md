@@ -22,12 +22,9 @@ claude-code-starter-kit/
 │   │   │   ├── SKILL.md
 │   │   │   ├── component-patterns.md
 │   │   │   └── testing-and-auth.md
-│   │   ├── kafka/                      # Kafka conventions
-│   │   │   ├── SKILL.md
-│   │   │   └── producer-consumer.md
-│   │   └── spark-java/                 # Spark/Java conventions
+│   │   └── kafka/                      # Kafka conventions
 │   │       ├── SKILL.md
-│   │       └── pipeline-patterns.md
+│   │       └── producer-consumer.md
 │   ├── generation/                     # Code scaffolding skills (project-level)
 │   │   ├── new-entity/SKILL.md         # Complete JPA entity package
 │   │   ├── new-endpoint/SKILL.md       # Add endpoint to existing feature
@@ -103,7 +100,6 @@ This copies the matching convention, generation, and refactoring skills to `/pat
 | `spring-boot` | `conventions/java`, `conventions/spring-boot`, all generation and refactoring skills |
 | `react` | `conventions/react`, `new-react-page`, `new-react-component` |
 | `kafka` | `conventions/kafka`, `new-kafka-topic` |
-| `spark-java` | `conventions/java`, `conventions/spark-java` |
 
 ### Common Combinations
 
@@ -113,7 +109,6 @@ This copies the matching convention, generation, and refactoring skills to `/pat
 | Spring Boot + React SaaS | `./install.sh /path/to/project java spring-boot react` |
 | Spring Boot + Kafka | `./install.sh /path/to/project java spring-boot kafka` |
 | Full stack with events | `./install.sh /path/to/project java spring-boot react kafka` |
-| Spark data pipeline | `./install.sh /path/to/project java spark-java` |
 
 ---
 
@@ -130,7 +125,6 @@ skills/conventions/java/          → loads when editing *.java files
 skills/conventions/spring-boot/   → loads when editing *.java files
 skills/conventions/react/         → loads when editing *.tsx, *.ts files
 skills/conventions/kafka/         → loads when editing *kafka*, *event* files
-skills/conventions/spark-java/    → loads when editing *.java, *spark* files
 ```
 
 Large convention skills are split across multiple files in the same directory. The `SKILL.md` holds the core rules; companion `.md` files contain detailed code examples linked from the main file.

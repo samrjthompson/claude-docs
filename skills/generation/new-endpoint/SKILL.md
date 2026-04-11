@@ -37,7 +37,6 @@ If anything is ambiguous, read the existing feature code first, then ask.
 ### 3. Controller Method (modify existing controller)
 
 - Add new method to the existing `{Feature}Controller.java`.
-- Include `@Operation` OpenAPI annotation with summary.
 - Use appropriate HTTP method annotation with full path.
 - Extract tenant ID from `JwtAuthenticationToken`.
 - Apply `@Valid` on request body if present.

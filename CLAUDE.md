@@ -21,7 +21,6 @@ Skills are organised into five categories:
   - `spring-boot/` — Package-by-feature structure, service/controller/DTO patterns, testing, security, multi-tenancy
   - `react/` — Component structure, React Query, TypeScript conventions, testing, auth
   - `kafka/` — Topic naming, event envelope, producer/consumer, error handling, testing
-  - `spark-java/` — Project structure, SparkSession, transformation classes, testing
 
 - **`generation/`** — Code scaffolding commands (user-invocable, project-level). Produce complete, runnable code — no placeholders or TODOs.
   - `new-entity/` — Complete JPA entity package (entity, repository, service, controller, DTOs, mapper, tests, migration)

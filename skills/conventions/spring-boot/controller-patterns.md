@@ -4,7 +4,6 @@
 
 ```java
 @RestController
-@Tag(name = "Invoices", description = "Invoice management endpoints")
 public class BillingController {
 
     private final BillingService billingService;
@@ -14,17 +13,15 @@ public class BillingController {
     }
 
     @PostMapping("/api/v1/invoices")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new invoice")
-    public InvoiceResponse createInvoice(
+    public ResponseEntity<InvoiceResponse> createInvoice(
             @Valid @RequestBody CreateInvoiceRequest request,
             @AuthenticationPrincipal JwtAuthenticationToken principal) {
         String tenantId = extractTenantId(principal);
-        return billingService.createInvoice(request, tenantId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(billingService.createInvoice(request, tenantId));
     }
 
     @GetMapping("/api/v1/invoices/{invoiceId}")
-    @Operation(summary = "Get invoice by ID")
     public InvoiceResponse getInvoice(
             @PathVariable UUID invoiceId,
             @AuthenticationPrincipal JwtAuthenticationToken principal) {
@@ -33,7 +30,6 @@ public class BillingController {
     }
 
     @GetMapping("/api/v1/invoices")
-    @Operation(summary = "List invoices with optional filters")
     public PageResponse<InvoiceSummaryResponse> listInvoices(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -44,7 +40,6 @@ public class BillingController {
     }
 
     @PutMapping("/api/v1/invoices/{invoiceId}")
-    @Operation(summary = "Update an existing invoice")
     public InvoiceResponse updateInvoice(
             @PathVariable UUID invoiceId,
             @Valid @RequestBody UpdateInvoiceRequest request,
@@ -54,7 +49,6 @@ public class BillingController {
     }
 
     @PostMapping("/api/v1/invoices/{invoiceId}/pay")
-    @Operation(summary = "Mark an invoice as paid")
     public InvoiceResponse payInvoice(
             @PathVariable UUID invoiceId,
             @AuthenticationPrincipal JwtAuthenticationToken principal) {
@@ -63,13 +57,12 @@ public class BillingController {
     }
 
     @DeleteMapping("/api/v1/invoices/{invoiceId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete a draft invoice")
-    public void deleteInvoice(
+    public ResponseEntity<Void> deleteInvoice(
             @PathVariable UUID invoiceId,
             @AuthenticationPrincipal JwtAuthenticationToken principal) {
         String tenantId = extractTenantId(principal);
         billingService.deleteInvoice(invoiceId, tenantId);
+        return ResponseEntity.noContent().build();
     }
 
     private String extractTenantId(JwtAuthenticationToken principal) {
@@ -86,7 +79,6 @@ public class BillingController {
 - **Status codes**: `200` reads/updates, `201` creates, `204` deletes, `400` validation, `404` not found, `422` business rule violations.
 - **No business logic in controllers.** Validate input (`@Valid`), extract tenant, call service, return response. Nothing else.
 - **Pagination**: Default page 20, max 100. Return `PageResponse` wrapper.
-- **Every endpoint** has `@Operation`, `@Tag`, `@ApiResponse`.
 - **Do not use `@RequestMapping` above controller classes.** Full paths in each method annotation.
 
 ## ControllerExceptionHandler
