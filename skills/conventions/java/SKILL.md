@@ -95,6 +95,81 @@ In addition to the universal rules: do not test Lombok-generated methods (getter
 
 Test every Kafka producer and consumer: serialisation, deserialisation, error handling, and retry behaviour. Use an embedded Kafka broker or TestContainers Kafka for integration tests.
 
+## Lombok
+
+### Default to Records
+
+Prefer Java records over classes. Use a mutable class only when mutability is required (JPA entities, objects needing post-construction modification).
+
+### Annotation Rules
+
+**Entities (mutable JPA classes):**
+- `@Getter` and `@Setter` on the class.
+- `@NoArgsConstructor` (required by JPA for proxy instantiation).
+- `@AllArgsConstructor` when a full-args constructor is useful alongside it.
+- Never `@Data` — it generates `equals`/`hashCode` from all fields, which breaks equality checks on JPA lazy-loaded proxies.
+
+**DTOs and value objects (records):**
+- `@Builder` on records with 3+ properties. Records with 1–2 properties use the canonical constructor directly.
+
+### Lombok `@Builder` vs. Manual Builder
+
+Use Lombok `@Builder` when the builder needs no custom logic — no default values, no pre-build validation, no computed fields.
+
+Implement a manual builder when custom logic is required: default field values, validation before `build()`, computed fields, or conditional field assignment.
+
+### Manual Builder Pattern
+
+Setter style is the field name directly (`id(...)`, not `withId(...)` or `setId(...)`). Each setter returns `this` for chaining.
+
+```java
+public class Notification {
+
+    private final UUID id;
+    private final String message;
+    private final Priority priority;
+
+    private Notification(Builder builder) {
+        this.id = builder.id;
+        this.message = builder.message;
+        this.priority = builder.priority;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private UUID id;
+        private String message;
+        private Priority priority = Priority.NORMAL; // default value
+
+        public Builder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder priority(Priority priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        public Notification build() {
+            Objects.requireNonNull(id, "id is required");
+            Objects.requireNonNull(message, "message is required");
+            return new Notification(this);
+        }
+    }
+}
+```
+
+Usage: `Notification.builder().id(id).message("Invoice sent").priority(Priority.HIGH).build()`
+
 ## Exception Hierarchy
 
 Maintain a shallow hierarchy rooted in `ApplicationException`:

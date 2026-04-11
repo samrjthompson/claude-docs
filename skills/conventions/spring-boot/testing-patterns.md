@@ -111,6 +111,7 @@ public final class BillingTestFixtures {
     private BillingTestFixtures() {}
 
     public static Customer customer(String tenantId) {
+        // Entity uses @Getter/@Setter (Lombok) — not a record because JPA requires mutability
         Customer customer = new Customer();
         customer.setName("Test Customer");
         customer.setEmail("test@example.com");

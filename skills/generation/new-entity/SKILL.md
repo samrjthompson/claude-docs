@@ -27,6 +27,8 @@ Generate ALL of the following files. Do not skip any file.
 ### 1. Entity Class (`{EntityName}.java`)
 
 - Extend `BaseEntity` from `common` package.
+- Annotate with `@Getter` and `@Setter` (Lombok). Do not use `@Data`.
+- Annotate with `@NoArgsConstructor` (required by JPA).
 - Map all specified fields with appropriate JPA annotations.
 - Use `@Column` with explicit `name`, `nullable`, and length/precision attributes.
 - Use `@Enumerated(EnumType.STRING)` for enum fields.
