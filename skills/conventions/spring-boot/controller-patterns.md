@@ -128,6 +128,47 @@ public class ControllerExceptionHandler {
 }
 ```
 
+### ErrorResponse Record
+
+`ErrorResponse` is the standard JSON body returned for all error responses:
+
+```java
+public record ErrorResponse(Error error) {
+
+    public record Error(
+            String code,
+            String message,
+            List<ErrorDetail> details,
+            Instant timestamp,
+            String traceId) {}
+
+    public static ErrorResponse of(String code, String message) {
+        return of(code, message, List.of());
+    }
+
+    public static ErrorResponse of(String code, String message, List<ErrorDetail> details) {
+        String traceId = MDC.get("traceId");
+        return new ErrorResponse(new Error(code, message, details, Instant.now(), traceId));
+    }
+}
+
+public record ErrorDetail(String field, String message) {}
+```
+
+Produces:
+
+```json
+{
+  "error": {
+    "code": "CUSTOMER_NOT_FOUND",
+    "message": "Customer with ID 'abc-123' was not found",
+    "details": [],
+    "timestamp": "2025-01-15T10:30:00Z",
+    "traceId": "req-xyz-789"
+  }
+}
+```
+
 ---
 
 ## DTO Patterns

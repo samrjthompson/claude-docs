@@ -40,6 +40,10 @@ Java/JVM naming and structural conventions. Complements the universal engineerin
 - Root: `com.example.app` — replace with actual organisation and application name.
 - Organise by feature, not by layer: `com.example.app.billing` not `com.example.app.controllers`.
 
+### Constants
+
+- Use `UPPER_SNAKE_CASE`: `MAX_RETRY_COUNT`, `DEFAULT_PAGE_SIZE`, `INVOICE_PREFIX`.
+
 ### Files
 
 - Java source files: `PascalCase` matching the class name.

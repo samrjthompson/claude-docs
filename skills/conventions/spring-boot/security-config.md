@@ -38,12 +38,14 @@ public class SecurityConfig {
 
 ## Security Rules
 
+- Every endpoint is authenticated by default. Mark exceptions explicitly (health checks, public assets).
 - Stateless sessions only. No server-side session storage.
 - CSRF disabled for stateless API (JWT in Authorization header).
 - Default deny — explicit allow only for known endpoints.
 - Health and info endpoints are public. Everything under `/api/` requires authentication.
 - Extract tenant ID from JWT token claims. Never from request parameters, headers, or path variables.
 - Use `@PreAuthorize` for endpoint-level authorization when roles are needed.
+- HTTPS in all environments. Never serve authenticated APIs over plain HTTP.
 
 ---
 
