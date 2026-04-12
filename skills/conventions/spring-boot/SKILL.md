@@ -172,21 +172,13 @@ public class BillingService {
 ```properties
 # application.properties
 spring.application.name=my-service
-spring.profiles.active=${SPRING_PROFILES_ACTIVE:local}
-
-# application-local.properties
 server.port=8080
-logging.level.com.example.app=DEBUG
-
-# application-prod.properties
-logging.level.com.example.app=INFO
-logging.level.root=WARN
+logging.level.root=INFO
 ```
 
 **Rules:**
-- Use `application.properties`. Profile-specific files for environment overrides.
-- Externalise all secrets and environment-specific values. Use environment variables in production.
-- Never commit secrets. `.env` files locally (gitignored), environment variables in production.
+- Use `application.properties` only. No profile-specific properties files (`application-local.properties`, `application-prod.properties`).
+- Externalise all secrets and environment-specific values via environment variables. Never commit secrets.
 - Define configurable values in `application.properties`. Reference in `@Configuration` classes using `@Value` in constructors.
 - Do not use static constants for configurable values.
 - Environment variable defaults: `mysql.url=${DATASOURCE_URL:jdbc:mysql://localhost:3306/db}`
